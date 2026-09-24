@@ -1,6 +1,6 @@
 import { Html, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import type { PerspectiveCamera } from 'three'
+import type { Group, Object3D, PerspectiveCamera } from 'three'
 import {
   createContext,
   useCallback,
@@ -8,12 +8,14 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
+  Suspense,
   type ReactNode,
   type RefObject,
 } from 'react'
 import { Medidor } from '../dev/Medidor'
 import { RESOLUCOES, useConfig } from '../engine/config'
 import type { CenaProps } from '../engine/tipos'
+import { ArvoreKenney, precarregarKenney } from './kenney'
 import {
   caixaUnitaria,
   discoSombra,
@@ -139,6 +141,29 @@ function SeletorResolucao() {
   )
 }
 
+/** TESTE: troca Computador, Notebook e Árvore pelos modelos do Kenney. */
+function SeletorModelos() {
+  const modelos = useConfig((s) => s.modelos)
+  const setModelos = useConfig((s) => s.setModelos)
+  useEffect(() => {
+    if (modelos === 'kenney') precarregarKenney()
+  }, [modelos])
+  const opcoes = [
+    ['proprios', 'Próprios'],
+    ['kenney', 'Kenney'],
+  ] as const
+  return (
+    <div className="seletor-resolucao seletor-modelos" role="radiogroup" aria-label="Modelos 3D">
+      <span>Modelos</span>
+      {opcoes.map(([valor, nome]) => (
+        <button key={valor} role="radio" aria-checked={valor === modelos} className={valor === modelos ? 'ativo' : ''} onClick={() => setModelos(valor)}>
+          {nome}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /**
  * O painel lateral cobre a direita da tela (ou a parte de baixo no celular):
  * desloca o centro da projeção para a cena ficar centralizada na área livre.
@@ -218,6 +243,7 @@ export function Palco({
         <div ref={camada} className="camada-rotulos" />
       </Camada.Provider>
       <SeletorResolucao />
+      <SeletorModelos />
     </div>
   )
 }
@@ -234,8 +260,18 @@ export function Ilha({ raio = 9, cor = '#a9d18e' }: { raio?: number; cor?: strin
 }
 
 export function Arvore({ pos, escala = 1 }: { pos: V3; escala?: number }) {
+  const kenney = useConfig((s) => s.modelos) === 'kenney'
+  const propria = <ArvorePropria />
   return (
     <group position={pos} scale={escala}>
+      {kenney ? <Suspense fallback={propria}><ArvoreKenney pos={pos} /></Suspense> : propria}
+    </group>
+  )
+}
+
+function ArvorePropria() {
+  return (
+    <group>
       <Cilindro raio={0.08} altura={0.5} pos={[0, 0.25, 0]} cor="#8a5a3b" />
       <Cilindro raio={0} raioBase={0.42} altura={0.9} lados={7} pos={[0, 0.85, 0]} cor="#4f9a57" />
       <Cilindro raio={0} raioBase={0.3} altura={0.65} lados={7} pos={[0, 1.25, 0]} cor="#5fae63" />
@@ -258,21 +294,51 @@ export function Rotulo({
   children,
   escuro,
   apagado,
+  classe = '',
 }: {
   pos: V3
   children: ReactNode
   escuro?: boolean
   apagado?: boolean
+  /** Classes extras do CSS (ex.: "bits", "grande", "emoji"). */
+  classe?: string
 }) {
+  // O <Html> do drei não segue o `visible` do three: o rótulo some quando algum
+  // ancestral está invisível (pacote fora da viagem, nível escondido do zoom…).
+  const ancora = useRef<Group>(null)
+  const caixa = useRef<HTMLDivElement>(null)
+  useFrame(() => {
+    let o: Object3D | null = ancora.current
+    let visivel = true
+    while (o) {
+      if (!o.visible) {
+        visivel = false
+        break
+      }
+      o = o.parent
+    }
+    if (caixa.current) caixa.current.style.visibility = visivel ? '' : 'hidden'
+  })
   return (
-    <Html position={pos} center zIndexRange={[4, 0]} portal={useCamada()}>
-      <div className={`rotulo ${escuro ? 'escuro' : ''} ${apagado ? 'apagado' : ''}`}>{children}</div>
+    <group ref={ancora} position={pos}>
+      <Html center zIndexRange={[4, 0]} portal={useCamada()}>
+        <div ref={caixa} className={`rotulo ${escuro ? 'escuro' : ''} ${apagado ? 'apagado' : ''} ${classe}`}>{children}</div>
+      </Html>
+    </group>
+  )
+}
+
+/** Caixa de HTML presa num canto da tela (não acompanha a câmera). */
+export function Fixo({ x, y, children }: { x: number; y: number; children: ReactNode }) {
+  return (
+    <Html calculatePosition={() => [x, y]} zIndexRange={[5, 0]} portal={useCamada()}>
+      {children}
     </Html>
   )
 }
 
 /** Marcador "?" clicável dos passos de explorar; vira "✓" depois de clicado. */
-export function Alvo({ id, pos, cena }: { id: string; pos: V3; cena: CenaProps }) {
+export function Alvo({ id, pos, cena, simbolo = '?' }: { id: string; pos: V3; cena: CenaProps; simbolo?: string }) {
   const portal = useCamada()
   if (!cena.alvos.includes(id)) return null
   const feito = cena.revelados.includes(id)
@@ -283,7 +349,7 @@ export function Alvo({ id, pos, cena }: { id: string; pos: V3; cena: CenaProps }
         onClick={() => cena.onRevelar(id)}
         aria-label={feito ? `${id} (já visto)` : `Descobrir: ${id}`}
       >
-        {feito ? '✓' : '?'}
+        {feito ? '✓' : simbolo}
       </button>
     </Html>
   )

@@ -8,8 +8,11 @@ type Progresso = {
   fases: Record<string, Resultado>
   /** Melhor resultado do chefão de cada trilha, por id da trilha. */
   chefoes: Record<string, Resultado>
+  /** Maior número de acertos no modo contra o relógio, por id da trilha. */
+  recordes: Record<string, number>
   registrarFase: (id: string, r: Resultado) => void
   registrarChefao: (id: string, r: Resultado) => void
+  registrarRecorde: (id: string, acertos: number) => void
   zerar: () => void
 }
 
@@ -35,9 +38,11 @@ export const useProgresso = create<Progresso>()(
     (set) => ({
       fases: {},
       chefoes: {},
+      recordes: {},
       registrarFase: (id, r) => set((s) => ({ fases: { ...s.fases, [id]: melhor(s.fases[id], r) } })),
       registrarChefao: (id, r) => set((s) => ({ chefoes: { ...s.chefoes, [id]: melhor(s.chefoes[id], r) } })),
-      zerar: () => set({ fases: {}, chefoes: {} }),
+      registrarRecorde: (id, n) => set((s) => ({ recordes: { ...s.recordes, [id]: Math.max(s.recordes[id] ?? 0, n) } })),
+      zerar: () => set({ fases: {}, chefoes: {}, recordes: {} }),
     }),
     { name: 'redelab-progresso', storage: createJSONStorage(() => armazenamentoSeguro) },
   ),

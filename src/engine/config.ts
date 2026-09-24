@@ -6,9 +6,14 @@ import { armazenamentoSeguro } from './progresso'
 export const RESOLUCOES = [480, 720, 1080] as const
 export type Resolucao = (typeof RESOLUCOES)[number]
 
+/** TESTE: modelos 3D próprios (caixas e cilindros) ou os do Kenney (CC0). */
+export type Modelos = 'proprios' | 'kenney'
+
 type Config = {
   resolucao: Resolucao
   setResolucao: (r: Resolucao) => void
+  modelos: Modelos
+  setModelos: (m: Modelos) => void
 }
 
 export const useConfig = create<Config>()(
@@ -16,6 +21,8 @@ export const useConfig = create<Config>()(
     (set) => ({
       resolucao: 720,
       setResolucao: (resolucao) => set({ resolucao }),
+      modelos: 'proprios',
+      setModelos: (modelos) => set({ modelos }),
     }),
     { name: 'redelab-config', storage: createJSONStorage(() => armazenamentoSeguro) },
   ),

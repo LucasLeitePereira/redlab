@@ -1,23 +1,47 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ir } from '../app/rota'
 import { Palco } from '../three/base'
 import { Desafio, embaralhar } from './Desafio'
+import { Painel } from './Painel'
 import { useProgresso } from './progresso'
-import type { Trilha } from './tipos'
+import { Treino } from './Treino'
+import type { Questao, Trilha } from './tipos'
 
 const QUESTOES_NO_CHEFAO = 10
+/** Na revisão de uma trilha com gerador, quantas das 10 questões são geradas na hora. */
+const GERADAS_NA_REVISAO = 4
+const SEGUNDOS_NO_RELOGIO = 180
+
+type Modo = 'menu' | 'revisao' | 'treino' | 'relogio'
+
+function sortear(trilha: Trilha): Questao[] {
+  const fixas = [...trilha.fases.flatMap((f) => f.desafio), ...trilha.chefaoExtras]
+  if (!trilha.gerador) return embaralhar(fixas).slice(0, QUESTOES_NO_CHEFAO)
+  const geradas = Array.from({ length: GERADAS_NA_REVISAO }, trilha.gerador)
+  return embaralhar([...embaralhar(fixas).slice(0, QUESTOES_NO_CHEFAO - GERADAS_NA_REVISAO), ...geradas])
+}
 
 /** Revisão final da trilha: sorteia questões de todas as fases + as extras. */
 export function Chefao({ trilha }: { trilha: Trilha }) {
-  const registrar = useProgresso((s) => s.registrarChefao)
-  const questoes = useMemo(
-    () => embaralhar([...trilha.fases.flatMap((f) => f.desafio), ...trilha.chefaoExtras]).slice(0, QUESTOES_NO_CHEFAO),
-    [trilha],
-  )
+  const { registrarChefao, registrarRecorde, chefoes, recordes } = useProgresso()
+  const [modo, setModo] = useState<Modo>(trilha.gerador ? 'menu' : 'revisao')
+  // Cada vez que um modo começa, ele recebe uma rodada nova (questões e relógio zerados).
+  const [rodada, setRodada] = useState(0)
+  const questoes = useMemo(() => sortear(trilha), [trilha, rodada])
+
+  function comecar(m: Modo) {
+    setRodada((r) => r + 1)
+    setModo(m)
+  }
+
+  const voltar = () => (trilha.gerador ? setModo('menu') : ir(`/trilha/${trilha.id}`))
+
   // Fundo: a cena da última fase, no estado do seu último passo.
   const ultima = trilha.fases[trilha.fases.length - 1]
   const estado = [...ultima.passos].reverse().find((p) => p.cena)?.cena ?? {}
   const Cena = ultima.Cena
+  const etiqueta = `Chefão da Trilha ${trilha.numero}`
+  const melhor = chefoes[trilha.id]
 
   return (
     <div className="tela">
@@ -33,13 +57,64 @@ export function Chefao({ trilha }: { trilha: Trilha }) {
           <strong>Revisão: {trilha.titulo}</strong>
         </div>
       </header>
-      <Desafio
-        etiqueta={`Chefão da Trilha ${trilha.numero}`}
-        titulo={`Revisão: ${trilha.titulo}`}
-        questoes={questoes}
-        onFim={(r) => registrar(trilha.id, r)}
-        onSair={() => ir(`/trilha/${trilha.id}`)}
-      />
+
+      {modo === 'menu' && (
+        <Painel cabeca={<><div className="etiqueta">{etiqueta}</div><h2>Escolha o desafio</h2></>}>
+          <div className="fase-lista">
+            <button className="fase-item" onClick={() => comecar('revisao')}>
+              <span className="status">★</span>
+              <span style={{ flex: 1 }}>
+                <b>Revisão da trilha</b>
+                <span>
+                  {QUESTOES_NO_CHEFAO} questões: das fases e exercícios novos.
+                  {melhor ? ` Melhor nota: ${melhor.acertos}/${melhor.total}.` : ''}
+                </span>
+              </span>
+            </button>
+            <button className="fase-item" onClick={() => comecar('treino')}>
+              <span className="status">∞</span>
+              <span style={{ flex: 1 }}>
+                <b>Treino livre</b>
+                <span>Exercícios gerados no formato do professor, sem fim. Pare quando quiser.</span>
+              </span>
+            </button>
+            <button className="fase-item" onClick={() => comecar('relogio')}>
+              <span className="status">⏱</span>
+              <span style={{ flex: 1 }}>
+                <b>Contra o relógio</b>
+                <span>
+                  Quantos você acerta em {SEGUNDOS_NO_RELOGIO / 60} minutos?
+                  {recordes[trilha.id] ? ` Recorde: ${recordes[trilha.id]}.` : ''}
+                </span>
+              </span>
+            </button>
+          </div>
+        </Painel>
+      )}
+
+      {modo === 'revisao' && (
+        <Desafio
+          key={rodada}
+          etiqueta={etiqueta}
+          titulo={`Revisão: ${trilha.titulo}`}
+          questoes={questoes}
+          onFim={(r) => registrarChefao(trilha.id, r)}
+          onSair={voltar}
+        />
+      )}
+
+      {(modo === 'treino' || modo === 'relogio') && trilha.gerador && (
+        <Treino
+          key={rodada}
+          etiqueta={etiqueta}
+          titulo={modo === 'treino' ? 'Treino livre' : 'Contra o relógio'}
+          gerar={trilha.gerador}
+          segundos={modo === 'relogio' ? SEGUNDOS_NO_RELOGIO : undefined}
+          recorde={recordes[trilha.id] ?? 0}
+          onFim={modo === 'relogio' ? (n) => registrarRecorde(trilha.id, n) : undefined}
+          onSair={voltar}
+        />
+      )}
     </div>
   )
 }

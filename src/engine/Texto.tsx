@@ -2,7 +2,8 @@ import { Fragment, type ReactNode } from 'react'
 import type { Fonte, Nota } from './tipos'
 
 // Mini-markdown do conteúdo: basta para escrever as fases sem depender de parser.
-// Blocos separados por linha em branco; "- " vira lista, "> " vira citação do slide.
+// Blocos separados por linha em branco; "- " vira lista, "1. " lista numerada e "> "
+// citação do slide (que também pode conter uma lista: "> - item").
 
 function inline(texto: string): ReactNode[] {
   return texto.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((trecho, i) => {
@@ -22,8 +23,19 @@ export function Texto({ children }: { children: string }) {
         if (linhas.every((l) => l.startsWith('- '))) {
           return <ul key={i}>{linhas.map((l, j) => <li key={j}>{inline(l.slice(2))}</li>)}</ul>
         }
+        if (linhas.every((l) => /^\d+\. /.test(l))) {
+          return <ol key={i}>{linhas.map((l, j) => <li key={j}>{inline(l.replace(/^\d+\. /, ''))}</li>)}</ol>
+        }
         if (linhas.every((l) => l.startsWith('> '))) {
-          return <p key={i} className="citacao">{inline(linhas.map((l) => l.slice(2)).join(' '))}</p>
+          const dentro = linhas.map((l) => l.slice(2))
+          if (dentro.every((l) => l.startsWith('- '))) {
+            return (
+              <div key={i} className="citacao">
+                <ul>{dentro.map((l, j) => <li key={j}>{inline(l.slice(2))}</li>)}</ul>
+              </div>
+            )
+          }
+          return <p key={i} className="citacao">{inline(dentro.join(' '))}</p>
         }
         return <p key={i}>{inline(linhas.join(' '))}</p>
       })}

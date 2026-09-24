@@ -46,7 +46,27 @@ export type QuestaoClassificar = {
   fonte: Fonte
 }
 
-export type Questao = QuestaoEscolha | QuestaoClassificar
+/**
+ * Como a resposta digitada é conferida: `ip` aceita "·" ou "," no lugar do ponto e um
+ * "/n" opcional; `numero` ignora separador de milhar; `binario` ignora espaços;
+ * `mascara` aceita tanto 255.255.255.0 quanto /24.
+ */
+export type FormatoCampo = 'ip' | 'numero' | 'binario' | 'mascara'
+
+export type CampoResposta = { rotulo: string; resposta: string; formato: FormatoCampo }
+
+export type QuestaoDigitar = {
+  tipo: 'digitar'
+  enunciado: string
+  /** Linhas mostradas em fonte mono abaixo do enunciado (ex.: "Endereço IP : 192.168.100.4"). */
+  dados?: string[]
+  /** Todos os campos precisam estar certos para a questão contar. */
+  campos: CampoResposta[]
+  explicacao: string
+  fonte: Fonte
+}
+
+export type Questao = QuestaoEscolha | QuestaoClassificar | QuestaoDigitar
 
 export type CenaProps = {
   estado: EstadoCena
@@ -78,4 +98,9 @@ export type Trilha = {
   fases: Fase[]
   /** Questões extras do chefão, além das dos desafios das fases. */
   chefaoExtras: Questao[]
+  /**
+   * Gerador de exercícios infinitos: com ele, o chefão ganha os modos "treino livre"
+   * e "contra o relógio", e a revisão mistura questões geradas.
+   */
+  gerador?: () => Questao
 }

@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
 import { estrelas, type Resultado } from './progresso'
 import { BarraPassos, Painel } from './Painel'
+import { conferir, EXEMPLO_CAMPO } from './respostas'
 import { FonteChip, Texto } from './Texto'
-import type { Questao, QuestaoClassificar, QuestaoEscolha } from './tipos'
+import type { Questao, QuestaoClassificar, QuestaoDigitar, QuestaoEscolha } from './tipos'
 
 export function embaralhar<T>(lista: T[]): T[] {
   const copia = [...lista]
@@ -98,17 +99,26 @@ export function Desafio({ etiqueta, titulo, questoes, onFim, onSair }: Props) {
         )
       }
     >
-      {questao.tipo === 'escolha'
-        ? <Escolha key={indice} q={questao} onResponder={responder} />
-        : <Classificar key={indice} q={questao} onResponder={responder} />}
-      {respondida !== null && (
-        <div className={`feedback ${respondida ? 'certa' : 'errada'}`}>
-          <div className="feedback-titulo">{respondida ? 'Acertou!' : 'Não foi dessa vez'}</div>
-          <Texto>{questao.explicacao}</Texto>
-          <FonteChip fonte={questao.fonte} />
-        </div>
-      )}
+      <CorpoQuestao key={indice} questao={questao} onResponder={responder} />
+      {respondida !== null && <Feedback questao={questao} certa={respondida} />}
     </Painel>
+  )
+}
+
+/** A questão em si (enunciado + forma de responder), sem o painel em volta. */
+export function CorpoQuestao({ questao, onResponder }: { questao: Questao; onResponder: (certa: boolean) => void }) {
+  if (questao.tipo === 'escolha') return <Escolha q={questao} onResponder={onResponder} />
+  if (questao.tipo === 'classificar') return <Classificar q={questao} onResponder={onResponder} />
+  return <Digitar q={questao} onResponder={onResponder} />
+}
+
+export function Feedback({ questao, certa }: { questao: Questao; certa: boolean }) {
+  return (
+    <div className={`feedback ${certa ? 'certa' : 'errada'}`}>
+      <div className="feedback-titulo">{certa ? 'Acertou!' : 'Não foi dessa vez'}</div>
+      <Texto>{questao.explicacao}</Texto>
+      <FonteChip fonte={questao.fonte} />
+    </div>
   )
 }
 
@@ -193,5 +203,65 @@ function Classificar({ q, onResponder }: { q: QuestaoClassificar; onResponder: (
         </div>
       )}
     </>
+  )
+}
+
+function Digitar({ q, onResponder }: { q: QuestaoDigitar; onResponder: (certa: boolean) => void }) {
+  const [valores, setValores] = useState(() => q.campos.map(() => ''))
+  const [certos, setCertos] = useState<boolean[] | null>(null)
+  const entradas = useRef<(HTMLInputElement | null)[]>([])
+
+  function enviar(e: FormEvent) {
+    e.preventDefault()
+    if (certos) return
+    // Enter com campo vazio leva ao próximo campo em vez de conferir pela metade.
+    const vazio = valores.findIndex((v) => v.trim() === '')
+    if (vazio >= 0) {
+      entradas.current[vazio]?.focus()
+      return
+    }
+    const resultado = q.campos.map((c, i) => conferir(c.formato, valores[i], c.resposta))
+    setCertos(resultado)
+    onResponder(resultado.every(Boolean))
+  }
+
+  return (
+    <form onSubmit={enviar}>
+      <div className="enunciado">{q.enunciado}</div>
+      {q.dados && (
+        <div className="dados">
+          {q.dados.map((d) => <div key={d}>{d}</div>)}
+        </div>
+      )}
+      <div className="campos">
+        {q.campos.map((c, i) => {
+          const estado = !certos ? '' : certos[i] ? 'certa' : 'errada'
+          return (
+            <label key={c.rotulo} className={`campo ${estado}`}>
+              <span>{c.rotulo}</span>
+              <input
+                ref={(el) => { entradas.current[i] = el }}
+                className="mono"
+                value={valores[i]}
+                onChange={(e) => setValores((v) => v.map((x, j) => (j === i ? e.target.value : x)))}
+                placeholder={EXEMPLO_CAMPO[c.formato]}
+                inputMode={c.formato === 'numero' || c.formato === 'binario' ? 'numeric' : 'decimal'}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                autoFocus={i === 0}
+                readOnly={certos !== null}
+              />
+              {estado === 'errada' && <div className="gabarito">Correto: <span className="mono">{c.resposta}</span></div>}
+            </label>
+          )
+        })}
+      </div>
+      {!certos && (
+        <div className="linha-botoes">
+          <button className="btn btn-primario" type="submit">Conferir</button>
+        </div>
+      )}
+    </form>
   )
 }

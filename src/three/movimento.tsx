@@ -194,3 +194,115 @@ export function Ondas({
     </group>
   )
 }
+
+/**
+ * Horários de um percurso de nó em nó: `chegadas[i]` é quando chega em `pontos[i]`
+ * (andando a `velocidade` unidades/s e parando `espera` s em cada nó intermediário).
+ */
+export function linhaDoTempo(pontos: V3[], velocidade: number, espera: number) {
+  const chegadas = [0]
+  for (let i = 1; i < pontos.length; i++) {
+    const [a, b] = [pontos[i - 1], pontos[i]]
+    const distancia = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])
+    const saida = chegadas[i - 1] + (i > 1 ? espera : 0)
+    chegadas.push(saida + distancia / velocidade)
+  }
+  return { chegadas, total: chegadas[chegadas.length - 1] }
+}
+
+/**
+ * Leva `children` de nó em nó em linha reta, parando em cada nó intermediário
+ * (guardar e encaminhar). Repete a cada `periodo` segundos; fora da viagem fica invisível.
+ */
+export function Percurso({
+  pontos,
+  velocidade = 2.5,
+  espera = 0,
+  atraso = 0,
+  periodo,
+  ativo = true,
+  children,
+}: {
+  pontos: V3[]
+  velocidade?: number
+  espera?: number
+  atraso?: number
+  /** Duração do ciclo inteiro (padrão: a viagem + 1 s). */
+  periodo?: number
+  ativo?: boolean
+  children: ReactNode
+}) {
+  const ref = useRef<Group>(null)
+  const inicio = useRef<number | null>(null)
+  const { chegadas, total } = useMemo(() => linhaDoTempo(pontos, velocidade, espera), [JSON.stringify(pontos), velocidade, espera])
+  const ciclo = periodo ?? total + 1
+
+  useFrame(({ clock }) => {
+    const g = ref.current
+    if (!g) return
+    if (!ativo) {
+      g.visible = false
+      inicio.current = null
+      return
+    }
+    if (inicio.current === null) inicio.current = clock.elapsedTime
+    const t = clock.elapsedTime - inicio.current - atraso
+    const u = t < 0 ? -1 : t % ciclo
+    if (u < 0 || u > total) {
+      g.visible = false
+      return
+    }
+    g.visible = true
+    let i = 1
+    while (i < chegadas.length - 1 && u > chegadas[i]) i++
+    const saida = chegadas[i - 1] + (i > 1 ? espera : 0)
+    const [a, b] = [pontos[i - 1], pontos[i]]
+    const s = u <= saida ? 0 : Math.min(1, (u - saida) / (chegadas[i] - saida))
+    g.position.set(a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s, a[2] + (b[2] - a[2]) * s)
+    g.lookAt(g.position.x + b[0] - a[0], g.position.y, g.position.z + b[2] - a[2])
+  })
+
+  return (
+    <group ref={ref} visible={false}>
+      {children}
+    </group>
+  )
+}
+
+/** Mostra `children` só entre `de` e `ate` segundos de um ciclo que se repete a cada `periodo`. */
+export function Janela({
+  periodo,
+  de,
+  ate,
+  atraso = 0,
+  ativo = true,
+  children,
+}: {
+  periodo: number
+  de: number
+  ate: number
+  atraso?: number
+  ativo?: boolean
+  children: ReactNode
+}) {
+  const ref = useRef<Group>(null)
+  const inicio = useRef<number | null>(null)
+  useFrame(({ clock }) => {
+    const g = ref.current
+    if (!g) return
+    if (!ativo) {
+      g.visible = false
+      inicio.current = null
+      return
+    }
+    if (inicio.current === null) inicio.current = clock.elapsedTime
+    const t = clock.elapsedTime - inicio.current - atraso
+    const u = t < 0 ? -1 : t % periodo
+    g.visible = u >= de && u < ate
+  })
+  return (
+    <group ref={ref} visible={false}>
+      {children}
+    </group>
+  )
+}
