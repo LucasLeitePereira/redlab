@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icone.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Laboratório 3D interativo para estudar Redes de Computadores." />
+    <title>RedeLab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Nunito:wght@500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Aparece na hora, enquanto o JS (three.js + React) baixa; o React substitui ao montar. -->
+    <div id="root">
+      <div style="position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,#8fcaf0 0%,#cfe8f7 55%,#fbefd9 100%);font-family:Nunito,system-ui,sans-serif;color:#1d2733">
+        <div style="text-align:center">
+          <img src="/icone.svg" alt="" width="64" height="64" />
+          <div style="font-weight:900;font-size:22px;margin-top:10px">RedeLab</div>
+          <div style="font-weight:600;font-size:14px;opacity:.7;margin-top:4px">Montando a cidade de dados…</div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
