@@ -152,7 +152,7 @@ function linhasDoModo(modo: string, ip: string, pref: number): { linhas: Linha[]
           { id: 'masc', rotulo: `Máscara /${pref}`, bits: bMasc, tom: 'mascara', octetos: 'misto', direita: masc },
           { id: 'ip', rotulo: 'IP', bits: bIp, tom: 'partes', octetos: 'misto', direita: ip, atraso: 0.4 },
           { id: 'hs', rotulo: "H's", bits: trocarHost(bIp, pref, 'H'), tom: 'partes', octetos: 'misto', atraso: 1.2 },
-          { id: 'rede', rotulo: 'Rede (H=0)', bits: trocarHost(bIp, pref, 0), tom: 'partes', octetos: 'misto', direita: `${rede(ip, pref)}/${pref}`, atraso: 2.2 },
+          { id: 'rede', rotulo: 'Sub-rede (H=0)', bits: trocarHost(bIp, pref, 0), tom: 'partes', octetos: 'misto', direita: `${rede(ip, pref)}/${pref}`, atraso: 2.2 },
           { id: 'bc', rotulo: 'Broadcast (H=1)', bits: trocarHost(bIp, pref, 1), tom: 'partes', octetos: 'misto', direita: `${broadcast(ip, pref)}/${pref}`, atraso: 3.2 },
         ],
         corte: pref,

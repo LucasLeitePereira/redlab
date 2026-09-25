@@ -677,7 +677,7 @@ Nos próximos passos você vai **cortar cabos** com a tesoura ✂ para ver o que
       fonte: f(14),
       cena: { topo: 'barra' },
       explorar: {
-        instrucao: 'Desligue um computador (⏻) e corte o cabo principal (✂).',
+        instrucao: 'Primeiro desligue um computador (⏻); depois corte o cabo principal (✂).',
         alvos: {
           pc: { titulo: '⏻ Computador desligado → só ele sai', texto: 'Problema no dispositivo não para a rede: os outros continuam conversando pelo cabo.' },
           cabo: { titulo: '✂ Cabo cortado → a rede inteira para', texto: 'Todas as estações dependem do mesmo cabo. Problema nele derruba todo mundo.' },
@@ -713,10 +713,10 @@ Nos próximos passos você vai **cortar cabos** com a tesoura ✂ para ver o que
 > Como no barramento, a topologia em anel também têm dispositivos **ligados em série**, a diferença é que **não existe extremidade**.
 
 - As transmissões ocorrem em **sentido único**;
-- O gerenciamento é feito através de uma **mensagem (*token*)** que é enviada **nó a nó**;
+- O gerenciamento é feito através de uma **mensagem** (*token*) que é enviada **nó a nó**;
 - Quando o sinal entra no anel, ele **circula até ser retirado pelo nó de destino**.
 
-A moeda dourada é o token dando a volta. A mensagem sai da origem e segue o sentido do anel até o destino.`,
+A moeda dourada é o token: a **permissão para transmitir**. A origem segura o token e manda a mensagem; o destino a retira do anel; aí a origem libera o token, que segue de nó em nó.`,
       fonte: f(15),
       cena: { topo: 'anel' },
       notas: [
@@ -838,7 +838,7 @@ Os quadrados verdes são os nós, como no desenho do slide.`,
 
 > **PROBLEMA** → Há o **monopólio do enlace**… o canal fica dedicado exclusivamente à ligação até que a comunicação seja desfeita.
 
-O caminho vermelho foi reservado para a ligação entre os dois telefones. A ligação cinza (**VOZ**) quer usar um desses enlaces e fica esperando.`,
+Duas ligações disputam os mesmos enlaces. Enquanto a ligação 1 tem o circuito reservado, a voz da ligação 2 (**VOZ**, em cinza) fica esperando no primeiro nó; só quando a 1 desliga é que a 2 consegue estabelecer o seu circuito, e aí é a 1 que espera.`,
       fonte: f(17),
       cena: { modo: 'circuitos' },
       notas: [
@@ -890,7 +890,7 @@ Os 5 pacotes vão por caminhos diferentes e chegam fora de ordem: **${ORDEM_DE_C
 - O enlace entre dois nós consecutivos é **compartilhado** por pacotes de outras proveniências e com outros destinos (**o canal não é monopolizado**).
 - Caso haja a perda de pacotes, o **pequeno tamanho permite uma fácil retransmissão**, pois o **cabeçalho** possibilita que a mensagem seja remontada **mesmo quando chegam fora de sequência**.
 
-Os dados roxos e verdes são pacotes de outras conversas usando os mesmos cabos.`,
+Os computadores **B** e **C** são outras conversas: os pacotes rosa e verde-água (sem número) usam os mesmos cabos que os nossos, mas cada um segue para o seu próprio destino. Nada se mistura, porque o **cabeçalho** de cada pacote diz para onde ele vai.`,
       fonte: f(19),
       cena: { modo: 'vantagens' },
       notas: [

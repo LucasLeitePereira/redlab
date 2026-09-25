@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { estrelas, type Resultado } from './progresso'
 import { BarraPassos, Painel } from './Painel'
 import { conferir, EXEMPLO_CAMPO } from './respostas'
@@ -22,15 +22,20 @@ type Props = {
   questoes: Questao[]
   onFim: (r: Resultado) => void
   onSair: () => void
+  /** Avisa qual questão está na tela, para a cena 3D mostrar o que ela pede. */
+  onQuestao?: (q: Questao) => void
 }
 
-export function Desafio({ etiqueta, titulo, questoes, onFim, onSair }: Props) {
+export function Desafio({ etiqueta, titulo, questoes, onFim, onSair, onQuestao }: Props) {
   const [indice, setIndice] = useState(0)
   const [acertos, setAcertos] = useState(0)
   const [respondida, setRespondida] = useState<null | boolean>(null)
   const [fim, setFim] = useState(false)
 
   const questao = questoes[indice]
+  useEffect(() => {
+    onQuestao?.(questao)
+  }, [questao, onQuestao])
   const ultima = indice === questoes.length - 1
 
   function responder(certa: boolean) {
@@ -122,6 +127,16 @@ export function Feedback({ questao, certa }: { questao: Questao; certa: boolean 
   )
 }
 
+/** Os dados do slide que a questão usa (IPs, linhas de um prompt, uma tabela…). */
+function Dados({ linhas }: { linhas?: string[] }) {
+  if (!linhas) return null
+  return (
+    <div className="dados">
+      {linhas.map((d, i) => <div key={i}>{d || ' '}</div>)}
+    </div>
+  )
+}
+
 function Escolha({ q, onResponder }: { q: QuestaoEscolha; onResponder: (certa: boolean) => void }) {
   const ordem = useMemo(() => embaralhar(q.opcoes.map((_, i) => i)), [q])
   const [escolhida, setEscolhida] = useState<number | null>(null)
@@ -129,6 +144,7 @@ function Escolha({ q, onResponder }: { q: QuestaoEscolha; onResponder: (certa: b
   return (
     <>
       <div className="enunciado">{q.enunciado}</div>
+      <Dados linhas={q.dados} />
       <div className="opcoes">
         {ordem.map((original, pos) => {
           const estado = escolhida === null ? ''
@@ -163,6 +179,7 @@ function Classificar({ q, onResponder }: { q: QuestaoClassificar; onResponder: (
   return (
     <>
       <div className="enunciado">{q.enunciado}</div>
+      <Dados linhas={q.dados} />
       <div className="classificar">
         {itens.map((item, i) => {
           const estado = !conferido ? '' : escolhas[i] === item.grupo ? 'certa' : 'errada'
@@ -228,11 +245,7 @@ function Digitar({ q, onResponder }: { q: QuestaoDigitar; onResponder: (certa: b
   return (
     <form onSubmit={enviar}>
       <div className="enunciado">{q.enunciado}</div>
-      {q.dados && (
-        <div className="dados">
-          {q.dados.map((d) => <div key={d}>{d}</div>)}
-        </div>
-      )}
+      <Dados linhas={q.dados} />
       <div className="campos">
         {q.campos.map((c, i) => {
           const estado = !certos ? '' : certos[i] ? 'certa' : 'errada'

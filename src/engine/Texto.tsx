@@ -5,7 +5,7 @@ import type { Fonte, Nota } from './tipos'
 // Blocos separados por linha em branco; "- " vira lista, "1. " lista numerada e "> "
 // citação do slide (que também pode conter uma lista: "> - item").
 
-function inline(texto: string): ReactNode[] {
+export function inline(texto: string): ReactNode[] {
   return texto.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).map((trecho, i) => {
     if (trecho.startsWith('**')) return <strong key={i}>{trecho.slice(2, -2)}</strong>
     if (trecho.startsWith('*')) return <em key={i}>{trecho.slice(1, -1)}</em>
@@ -68,8 +68,8 @@ export function CaixaNota({ nota }: { nota: Nota }) {
       <div className="nota nota-slide">
         <div className="nota-titulo">{ICONES[nota.tipo]} {nota.titulo}</div>
         <div className="colunas">
-          <div className="coluna no-slide"><b>No slide</b>{nota.noSlide}</div>
-          <div className="coluna na-pratica"><b>Na prática</b>{nota.naPratica}</div>
+          <div className="coluna no-slide"><b>No slide</b>{inline(nota.noSlide)}</div>
+          <div className="coluna na-pratica"><b>Na prática</b>{inline(nota.naPratica)}</div>
         </div>
       </div>
     )

@@ -40,7 +40,7 @@ export function explicarCorte(ip: string, pref: number, mostrar: { rede?: boolea
     `- O corte cai no **${ORDINAL[o]} octeto**: ${k} bit(s) de rede e ${8 - k} de host nele.`,
     `- ${ORDINAL[o]} octeto do IP: ${doIp} = \`${comCorte(doIp, k)}\``,
   )
-  if (mostrar.rede) linhas.push(`- Rede (H's = 0): \`${comCorte(nr, k)}\` = ${nr} → **${r}**`)
+  if (mostrar.rede) linhas.push(`- Sub-rede (H's = 0): \`${comCorte(nr, k)}\` = ${nr} → **${r}**`)
   if (mostrar.broadcast) linhas.push(`- Broadcast (H's = 1): \`${comCorte(nb, k)}\` = ${nb} → **${b}**`)
   return linhas
 }

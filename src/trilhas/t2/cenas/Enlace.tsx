@@ -1,4 +1,4 @@
-import { Arvore, Cilindro, Esfera, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
+import { Arvore, Caixa, Cilindro, Esfera, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
 import { Ligacao, type Viagem } from '../../../three/Ligacao'
 import { Computador } from '../../../three/modelos'
 import { Janela } from '../../../three/movimento'
@@ -24,17 +24,26 @@ const VOLTA_HALF = [FIM_A + TROCA_HALF, FIM_A + TROCA_HALF + TRECHO_HALF + FOLGA
 const FIM_B = VOLTA_HALF[1] + TRECHO_HALF
 const PERIODO_HALF = FIM_B + TROCA_HALF
 
-/** Rua reta entre os dois computadores, na profundidade `z`. */
-function Rua({ z, viagens }: { z: number; viagens: Viagem[] }) {
-  return <Ligacao pontos={[[A[0] + 1.2, 0.16, z], [B[0] - 1.2, 0.16, z]]} raio={0.09} viagens={viagens} />
+// Laterais dos gabinetes (escala 0.9), virados um para o outro: o de A à direita dele, o de B à esquerda.
+const LADO_A = A[0] + (0.95 + 0.21) * 0.9
+const LADO_B = B[0] - (0.95 + 0.21) * 0.9
+
+/** Rua reta entre os dois computadores, na profundidade `z`; `colada` a leva até a lateral de cada um. */
+function Rua({ z, viagens, colada }: { z: number; viagens: Viagem[]; colada?: boolean }) {
+  const [x0, x1] = colada ? [LADO_A, LADO_B] : [A[0] + 1.2, B[0] - 1.2]
+  return <Ligacao pontos={[[x0, 0.16, z], [x1, 0.16, z]]} raio={0.09} viagens={viagens} />
 }
 
-/** Setas no chão indicando o sentido da faixa. */
-function Setas({ z, sentido }: { z: number; sentido: 1 | -1 }) {
+/** Setas no chão (haste + ponta) indicando o sentido da faixa, ao lado da rua (`lado` 1 = frente, -1 = atrás). */
+function Setas({ z, sentido, lado = 1 }: { z: number; sentido: 1 | -1; lado?: 1 | -1 }) {
   return (
     <>
       {[-1.8, 0, 1.8].map((x) => (
-        <Cilindro key={x} raio={0} raioBase={0.22} altura={0.5} lados={3} pos={[x, 0.17, z + 0.45]} rot={[0, 0, -sentido * Math.PI / 2]} cor="#f2b134" sombra={false} />
+        <group key={x} position={[x, 0.06, z + lado * 0.45]} rotation={[0, sentido === 1 ? 0 : Math.PI, 0]}>
+          <Caixa tam={[0.5, 0.06, 0.12]} pos={[-0.2, 0, 0]} cor="#f2b134" sombra={false} />
+          {/* prisma de 3 lados em pé: a ponta do triângulo fica virada para +x */}
+          <Cilindro raio={0.26} altura={0.06} lados={3} pos={[0.13, 0, 0]} rot={[0, Math.PI / 2, 0]} cor="#f2b134" sombra={false} />
+        </group>
       ))}
     </>
   )
@@ -61,7 +70,7 @@ export function CenaEnlace({ estado }: CenaProps) {
       <Lote pos={A} tam={[2.6, 2.4]} />
       <Lote pos={B} tam={[2.6, 2.4]} />
       <Computador pos={A} escala={0.9} />
-      <Computador pos={B} escala={0.9} tela="#8fd9a8" />
+      <Computador pos={B} escala={0.9} tela="#8fd9a8" gabinete="esquerda" />
       <Rotulo pos={[A[0], 1.8, A[2]]}>A</Rotulo>
       <Rotulo pos={[B[0], 1.8, B[2]]}>B</Rotulo>
 
@@ -92,11 +101,12 @@ export function CenaEnlace({ estado }: CenaProps) {
 
       {modo === 'full' && (
         <group key="full">
-          <Rua z={0} viagens={[0, 1, 2].map((i) => ({ cor: IDA, duracao: 3, pausa: 0, atraso: i }))} />
-          <Rua z={1.2} viagens={[0, 1, 2].map((i) => ({ cor: VOLTA, duracao: 3, pausa: 0, atraso: i + 0.5, inverso: true }))} />
-          <Setas z={0} sentido={1} />
-          <Setas z={1.2} sentido={-1} />
-          <Rotulo pos={[0, 1.4, 0.6]} escuro>Duas faixas: os dois ao mesmo tempo</Rotulo>
+          {/* as duas faixas encostam na lateral dos computadores; cada uma com suas setas do lado de fora */}
+          <Rua colada z={-0.9} viagens={[0, 1, 2].map((i) => ({ cor: IDA, duracao: 3, pausa: 0, atraso: i }))} />
+          <Rua colada z={-0.4} viagens={[0, 1, 2].map((i) => ({ cor: VOLTA, duracao: 3, pausa: 0, atraso: i + 0.5, inverso: true }))} />
+          <Setas z={-0.9} sentido={1} lado={-1} />
+          <Setas z={-0.4} sentido={-1} />
+          <Rotulo pos={[0, 1.6, -1.8]} escuro>Duas faixas: os dois ao mesmo tempo</Rotulo>
         </group>
       )}
 

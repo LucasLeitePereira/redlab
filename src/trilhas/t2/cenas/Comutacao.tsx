@@ -1,8 +1,8 @@
 import { Arvore, Caixa, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
 import { Ligacao } from '../../../three/Ligacao'
 import { Computador, Telefone } from '../../../three/modelos'
-import { Dado } from '../../../three/dados'
-import { Janela, linhaDoTempo, Percurso, Pulsos, useCurva } from '../../../three/movimento'
+import { Dado, type TipoDado } from '../../../three/dados'
+import { Janela, linhaDoTempo, Percurso, Pulsos, useCurva, Viajante } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
 
 // Fase 2.6 — comutação (Aula 02, p. 16–19). A mesma malha de nós para os três tipos:
@@ -41,10 +41,11 @@ function No({ id, aceso }: { id: string; aceso?: boolean }) {
   )
 }
 
-function Malha({ fraca, trafego }: { fraca?: boolean; trafego?: boolean }) {
+/** `semAcesso`: sem os enlaces O–n1 e n6–D (a cena desenha os seus próprios). */
+function Malha({ fraca, trafego, semAcesso }: { fraca?: boolean; trafego?: boolean; semAcesso?: boolean }) {
   return (
     <>
-      {ENLACES.map(([a, b], i) => (
+      {ENLACES.map(([a, b], i) => (semAcesso && (a === 'O' || b === 'D')) ? null : (
         <Ligacao
           key={`${a}-${b}`}
           pontos={[naLinha(a), naLinha(b)]}
@@ -57,22 +58,13 @@ function Malha({ fraca, trafego }: { fraca?: boolean; trafego?: boolean }) {
   )
 }
 
-function Pontas({ telefone }: { telefone?: boolean }) {
+function Pontas() {
   return (
     <>
       <Lote pos={NOS.O} tam={[2.2, 2.2]} />
       <Lote pos={NOS.D} tam={[2.2, 2.2]} />
-      {telefone ? (
-        <>
-          <Telefone pos={NOS.O} rot={[0, 0.4, 0]} escala={1.3} />
-          <Telefone pos={NOS.D} rot={[0, -0.4, 0]} escala={1.3} cor="#e98a2e" />
-        </>
-      ) : (
-        <>
-          <Computador pos={NOS.O} escala={0.75} />
-          <Computador pos={NOS.D} escala={0.75} tela="#8fd9a8" />
-        </>
-      )}
+      <Computador pos={NOS.O} escala={0.75} />
+      <Computador pos={NOS.D} escala={0.75} tela="#8fd9a8" />
       <Rotulo pos={[NOS.O[0], 1.6, 0]}>Origem</Rotulo>
       <Rotulo pos={[NOS.D[0], 1.6, 0]}>Destino</Rotulo>
     </>
@@ -81,26 +73,87 @@ function Pontas({ telefone }: { telefone?: boolean }) {
 
 // ---------- Circuitos ----------
 
-const CIRCUITO = ['O', 'n1', 'n2', 'n4', 'n6', 'D']
+// Duas ligações (1 e 2), cada uma com um telefone de cada lado, disputando os mesmos enlaces.
+// Em cada metade do ciclo uma delas tem o circuito reservado e a outra espera no primeiro nó;
+// quando a dona desliga, a outra estabelece o seu circuito, e os papéis se invertem.
+const MIOLO = ['n1', 'n2', 'n4', 'n6']
+const LIGACOES = {
+  1: { origem: [-6.2, 0.12, -1.2] as V3, destino: [6.2, 0.12, -1.2] as V3, cor: '#e0463f' },
+  2: { origem: [-6.2, 0.12, 1.2] as V3, destino: [6.2, 0.12, 1.2] as V3, cor: '#7458c4' },
+}
+type Id = keyof typeof LIGACOES
+const noChao = (p: V3, dy = 0): V3 => [p[0], Y + dy, p[2]]
+const caminhoDa = (id: Id, dy = 0): V3[] => [noChao(LIGACOES[id].origem, dy), ...rota(MIOLO, dy), noChao(LIGACOES[id].destino, dy)]
+/** Onde a ligação que não tem o circuito para: no enlace de acesso, pouco antes do primeiro nó. */
+const pontoDeEspera = (id: Id): V3 => {
+  const [o, n] = [LIGACOES[id].origem, NOS.n1]
+  return [o[0] + (n[0] - o[0]) * 0.72, Y + 0.02, o[2] + (n[2] - o[2]) * 0.72]
+}
 
-function Circuitos() {
-  const curva = useCurva(rota(CIRCUITO, 0.04))
-  const espera = naLinha('n4')
+const EM_USO = 6 // circuito de uma ligação ativo; a outra chega e espera
+const TROCA = 4.5 // a dona desliga; a outra estabelece o circuito
+const METADE = EM_USO + TROCA
+const PERIODO_CIRCUITOS = 2 * METADE
+
+/** Uma metade do ciclo: `dona` com o circuito reservado, `outra` esperando e depois assumindo. */
+function MetadeCircuitos({ dona, outra, t0 }: { dona: Id; outra: Id; t0: number }) {
+  const caminho = caminhoDa(dona, 0.03)
+  const curvaVoz = useCurva(caminhoDa(dona, 0.04))
+  const chegando = useCurva([noChao(LIGACOES[outra].origem, 0.02), pontoDeEspera(outra)])
+  const estabelecendo = useCurva([pontoDeEspera(outra), ...caminhoDa(outra, 0.02).slice(1)])
+  const espera = pontoDeEspera(outra)
   return (
     <>
-      <Pontas telefone />
-      <Malha fraca />
-      {INTERMEDIARIOS.map((id) => <No key={id} id={id} aceso={CIRCUITO.includes(id)} />)}
-      {CIRCUITO.slice(1).map((id, i) => (
-        <Ligacao key={id} pontos={[naLinha(CIRCUITO[i], 0.03), naLinha(id, 0.03)]} raio={0.1} cor="#e0463f" />
+      <Janela periodo={PERIODO_CIRCUITOS} de={t0} ate={t0 + EM_USO}>
+        {caminho.slice(1).map((p, i) => (
+          <Ligacao key={i} pontos={[caminho[i], p]} raio={0.1} cor={LIGACOES[dona].cor} />
+        ))}
+        <Pulsos curva={curvaVoz} cor="#ffd23f" quantidade={10} duracao={4} />
+        <Rotulo pos={[0, 1.4, -2.9]} escuro>Ligação {dona}: circuito reservado só para ela</Rotulo>
+      </Janela>
+
+      {/* a outra ligação chega ao primeiro nó e fica esperando o enlace */}
+      <Viajante curva={chegando} duracao={1.5} pausa={PERIODO_CIRCUITOS - 1.5} atraso={t0 + 0.5}>
+        <group scale={0.8}><Dado cor="#8e99a6" tipo="voz" /></group>
+      </Viajante>
+      <Janela periodo={PERIODO_CIRCUITOS} de={t0 + 2} ate={t0 + EM_USO}>
+        <group position={espera} scale={0.8}><Dado cor="#8e99a6" tipo="voz" /></group>
+        <Rotulo pos={[espera[0], 1.0, espera[2]]}>⛔ Ligação {outra} esperando: enlace ocupado</Rotulo>
+      </Janela>
+
+      {/* a dona desligou: a outra estabelece o seu circuito até o destino */}
+      <Viajante curva={estabelecendo} duracao={TROCA - 0.5} pausa={PERIODO_CIRCUITOS - TROCA + 0.5} atraso={t0 + EM_USO}>
+        <group scale={0.8}><Dado cor="#8e99a6" tipo="voz" /></group>
+      </Viajante>
+      <Janela periodo={PERIODO_CIRCUITOS} de={t0 + EM_USO} ate={t0 + METADE}>
+        <Rotulo pos={[0, 1.4, -2.9]} escuro>Ligação {dona} desligou: a ligação {outra} estabelece o seu circuito</Rotulo>
+      </Janela>
+    </>
+  )
+}
+
+function Circuitos() {
+  return (
+    <>
+      <Lote pos={NOS.O} tam={[2.2, 4.2]} />
+      <Lote pos={NOS.D} tam={[2.2, 4.2]} />
+      {([1, 2] as Id[]).map((id) => (
+        <group key={id}>
+          <Telefone pos={LIGACOES[id].origem} rot={[0, 0.4, 0]} escala={1.2} cor={LIGACOES[id].cor} />
+          <Telefone pos={LIGACOES[id].destino} rot={[0, -0.4, 0]} escala={1.2} cor={LIGACOES[id].cor} />
+          <Rotulo pos={[LIGACOES[id].origem[0], 1.0, LIGACOES[id].origem[2]]}>{id}</Rotulo>
+          <Rotulo pos={[LIGACOES[id].destino[0], 1.0, LIGACOES[id].destino[2]]}>{id}</Rotulo>
+          {/* enlaces de acesso de cada telefone */}
+          <Ligacao pontos={[noChao(LIGACOES[id].origem), naLinha('n1')]} raio={0.06} cor="#9fb0c6" />
+          <Ligacao pontos={[naLinha('n6'), noChao(LIGACOES[id].destino)]} raio={0.06} cor="#9fb0c6" />
+        </group>
       ))}
-      <Pulsos curva={curva} cor="#ffd23f" quantidade={10} duracao={4} />
-      <Rotulo pos={[0, 1.4, -2.9]} escuro>Circuito reservado de ponta a ponta</Rotulo>
-      {/* outra ligação querendo usar o enlace n2–n4: fica esperando */}
-      <group position={[espera[0] - 0.9, 0.12, espera[2] + 1.3]} rotation={[0, Math.PI * 0.8, 0]} scale={0.8}>
-        <Dado cor="#8e99a6" tipo="voz" />
-      </group>
-      <Rotulo pos={[espera[0] - 0.9, 1.0, espera[2] + 1.3]}>⛔ Esperando: canal ocupado</Rotulo>
+      <Rotulo pos={[NOS.O[0], 0.5, 2.5]}>Origem</Rotulo>
+      <Rotulo pos={[NOS.D[0], 0.5, 2.5]}>Destino</Rotulo>
+      <Malha fraca semAcesso />
+      {INTERMEDIARIOS.map((id) => <No key={id} id={id} aceso={MIOLO.includes(id)} />)}
+      <MetadeCircuitos dona={1} outra={2} t0={0} />
+      <MetadeCircuitos dona={2} outra={1} t0={METADE} />
     </>
   )
 }
@@ -175,12 +228,61 @@ const PERIODO_PACOTES = TODOS_CHEGARAM + 2.8
 /** Ordem em que os pacotes chegam (números de 1 a 5). */
 export const ORDEM_DE_CHEGADA = CHEGADAS.map((t, i) => [t, i + 1]).sort((a, b) => a[0] - b[0]).map(([, n]) => n)
 
+// Outras conversas (passo das vantagens): computadores atrás dos nós de cima e de baixo, com
+// pacotes sem número e em cores fora de CORES_PACOTE. Usam os mesmos enlaces que os nossos
+// pacotes, mas cada um segue para o seu destino.
+const OUTRAS: { nome: string; cor: string; tipo: TipoDado; origem: V3; entrada: string; destino: V3; saida: string; caminhos: string[][] }[] = [
+  {
+    nome: 'B', cor: '#e46aa8', tipo: 'musica',
+    origem: [-2.6, 0.12, -5.1], entrada: 'n2', destino: [2.6, 0.12, 5.1], saida: 'n5',
+    caminhos: [['n2', 'n5'], ['n2', 'n4', 'n6', 'n5'], ['n2', 'n5']],
+  },
+  {
+    nome: 'C', cor: '#17a2a2', tipo: 'imagem',
+    origem: [-2.6, 0.12, 5.1], entrada: 'n3', destino: [2.6, 0.12, -5.1], saida: 'n4',
+    caminhos: [['n3', 'n4'], ['n3', 'n5', 'n6', 'n4'], ['n3', 'n4']],
+  },
+]
+
+function OutrasConversas() {
+  return (
+    <>
+      {OUTRAS.map((c, k) => (
+        <group key={c.nome}>
+          {[c.origem, c.destino].map((p, i) => (
+            <group key={i}>
+              <Lote pos={p} tam={[2.0, 1.8]} />
+              <Computador pos={p} escala={0.6} tela={c.cor} />
+              <Rotulo pos={[p[0], 1.35, p[2]]}>{c.nome} · {i === 0 ? 'origem' : 'destino'}</Rotulo>
+            </group>
+          ))}
+          <Ligacao pontos={[[c.origem[0], Y, c.origem[2]], naLinha(c.entrada)]} raio={0.06} cor="#3b6fb5" />
+          <Ligacao pontos={[naLinha(c.saida), [c.destino[0], Y, c.destino[2]]]} raio={0.06} cor="#3b6fb5" />
+          {c.caminhos.map((meio, i) => (
+            <Percurso
+              key={i}
+              pontos={[[c.origem[0], Y, c.origem[2]], ...rota(meio), [c.destino[0], Y, c.destino[2]]]}
+              velocidade={2.6 + i * 0.5}
+              espera={ESPERA_PACOTE}
+              atraso={0.3 + k * 0.5 + i * 1.1}
+              periodo={PERIODO_PACOTES}
+            >
+              <group scale={0.6}><Dado cor={c.cor} tipo={c.tipo} /></group>
+            </Percurso>
+          ))}
+        </group>
+      ))}
+    </>
+  )
+}
+
 function Pacotes({ outros }: { outros?: boolean }) {
   const prateleira = (i: number): V3 => [3.6 + i * 0.62, 0.12, -3.1]
   return (
     <>
       <Pontas />
-      <Malha trafego={outros} />
+      <Malha />
+      {outros && <OutrasConversas />}
       {INTERMEDIARIOS.map((id) => <No key={id} id={id} />)}
       {PACOTES.map((p, i) => (
         <group key={i}>

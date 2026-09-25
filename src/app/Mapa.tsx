@@ -1,10 +1,10 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
-import { CatmullRomCurve3, DoubleSide, MeshStandardMaterial, Vector3, type Group, type Mesh } from 'three'
+import { CatmullRomCurve3, DoubleSide, MeshStandardMaterial, Vector3, type Group, type Mesh, type PerspectiveCamera } from 'three'
 import { Painel } from '../engine/Painel'
 import { estrelas, useProgresso } from '../engine/progresso'
 import type { Trilha } from '../engine/tipos'
-import { Caixa, Cilindro, Palco, Rotulo, useAtualizarSombras, type V3 } from '../three/base'
+import { Caixa, Cilindro, Esfera, Palco, Rotulo, useAtualizarSombras, type V3 } from '../three/base'
 import { geometriaFaixa, geometriaPista, LARGURA_PISTA } from '../three/estrada'
 import { PosteKenney } from '../three/kenney'
 import { emSequencia, Ligacao } from '../three/Ligacao'
@@ -14,7 +14,7 @@ import { TRILHAS } from '../trilhas'
 import { ir } from './rota'
 import { DESENVOLVEDOR, DISCIPLINA, PROFESSOR, VERSAO } from '../versao'
 
-const POSICOES: V3[] = [[-7.4, 0, 1.2], [-3.7, 0, -2], [0, 0, 1.4], [3.7, 0, -2], [7.4, 0, 1.2]]
+const POSICOES: V3[] = [[-8, 0, 1.5], [-4.8, 0, -2.1], [-1.6, 0, 1.5], [1.6, 0, -2.1], [4.8, 0, 1.5], [8, 0, -2.1]]
 const CINZA = '#b8bfc7'
 const RAIO_ILHA = 2.1
 const MATERIAL_PISTA = new MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: DoubleSide })
@@ -52,6 +52,17 @@ function Miniatura({ numero }: { numero: number }) {
         <group scale={0.6}>
           <Servidor pos={[-0.8, 0, 0]} />
           <PontoDeAcesso pos={[1, 0, 0.3]} />
+        </group>
+      )
+    case 6:
+      // pilha do modelo de 5 camadas (cores do slide) ao lado de um globo: TCP/IP e a Internet
+      return (
+        <group scale={0.6}>
+          {['#7a5520', '#c8901e', '#8a3f17', '#34506e', '#2d5a2a'].map((cor, i) => (
+            <Caixa key={i} tam={[1.1, 0.3, 0.8]} pos={[-0.7, 0.16 + i * 0.32, 0]} cor={cor} />
+          ))}
+          <Esfera raio={0.6} pos={[0.9, 0.6, 0.1]} cor="#3f7fc4" />
+          <Cilindro raio={0.62} altura={0.06} lados={24} pos={[0.9, 0.6, 0.1]} cor="#a9d18e" />
         </group>
       )
     default:
@@ -220,10 +231,38 @@ function Ponte({ de, para, alturas }: { de: number; para: number; alturas: Altur
   )
 }
 
+const CAMERA_MAPA: V3 = [0, 13, 23]
+const ALVO_MAPA: V3 = [0, 0, -0.3]
+/** Meia largura do mapa (ilhas das pontas + margem), em unidades da cena. */
+const MEIA_LARGURA = POSICOES[POSICOES.length - 1][0] + RAIO_ILHA + 1
+
+/**
+ * Afasta a câmera o suficiente para as ilhas das pontas caberem na área livre da tela
+ * (fora do painel), em qualquer proporção de janela. Nunca chega mais perto que CAMERA_MAPA.
+ */
+function AjustarDistancia() {
+  const { camera, size } = useThree()
+  useEffect(() => {
+    const cam = camera as PerspectiveCamera
+    const tanV = Math.tan((cam.fov * Math.PI) / 360)
+    // o Palco desloca a vista para o painel não cobrir a cena (ver Enquadrar em three/base)
+    const largo = size.width > 820
+    const livre = largo ? size.width - 446 : size.width
+    const alturaTotal = largo ? size.height : size.height * 1.5
+    const precisa = MEIA_LARGURA / (tanV * (livre / alturaTotal))
+    const alvo = new Vector3(...ALVO_MAPA)
+    const dir = new Vector3(...CAMERA_MAPA).sub(alvo)
+    const distancia = Math.min(34, Math.max(dir.length(), precisa))
+    cam.position.copy(alvo).addScaledVector(dir.normalize(), distancia)
+  }, [camera, size])
+  return null
+}
+
 function CenaMapa({ selecionada }: { selecionada?: string }) {
   const alturas = useRef(POSICOES.map(() => 0))
   return (
     <>
+      <AjustarDistancia />
       {TRILHAS.map((t, i) => (
         <IlhaTrilha key={t.id} trilha={t} pos={POSICOES[i]} selecionada={t.id === selecionada} indice={i} alturas={alturas} />
       ))}
@@ -243,7 +282,7 @@ export function Mapa({ trilhaId }: { trilhaId?: string }) {
   return (
     <div className="tela">
       <div className="ceu">
-        <Palco camera={[0, 12, 21]} alvo={[0, 0, -0.3]} distancia={[10, 34]}>
+        <Palco camera={CAMERA_MAPA} alvo={ALVO_MAPA} distancia={[10, 34]}>
           <CenaMapa selecionada={trilhaId} />
         </Palco>
       </div>
@@ -285,6 +324,14 @@ export function Mapa({ trilhaId }: { trilhaId?: string }) {
             <dd>
               {VERSAO}
               <small>nº de deploys . nº de commits</small>
+            </dd>
+            <dt>Modelos 3D</dt>
+            <dd>
+              Kenney (CC0)
+              <small>
+                Telefone: “Phone” por Poly by Google,{' '}
+                <a href="https://poly.pizza/m/esa-gfuZgup" target="_blank" rel="noreferrer">Poly Pizza</a>, CC-BY 3.0
+              </small>
             </dd>
           </dl>
         </Painel>

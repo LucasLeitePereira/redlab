@@ -29,21 +29,35 @@ export type Passo = {
 export type QuestaoEscolha = {
   tipo: 'escolha'
   enunciado: string
+  /** Linhas mostradas em fonte mono abaixo do enunciado: os dados do slide que a questão usa. */
+  dados?: string[]
   opcoes: string[]
   /** Índice da opção correta em `opcoes`. */
   correta: number
   explicacao: string
   fonte: Fonte
+  /**
+   * Estado da cena 3D enquanto a questão está na tela: mostra a figura do slide que ela usa.
+   * Sem ele, a cena fica no último passo da fase.
+   */
+  cena?: EstadoCena
 }
 
 export type QuestaoClassificar = {
   tipo: 'classificar'
   enunciado: string
+  /** Linhas mostradas em fonte mono abaixo do enunciado: os dados do slide que a questão usa. */
+  dados?: string[]
   grupos: string[]
   /** `grupo` é o índice em `grupos`. */
   itens: { texto: string; grupo: number }[]
   explicacao: string
   fonte: Fonte
+  /**
+   * Estado da cena 3D enquanto a questão está na tela: mostra a figura do slide que ela usa.
+   * Sem ele, a cena fica no último passo da fase.
+   */
+  cena?: EstadoCena
 }
 
 /**
@@ -64,6 +78,11 @@ export type QuestaoDigitar = {
   campos: CampoResposta[]
   explicacao: string
   fonte: Fonte
+  /**
+   * Estado da cena 3D enquanto a questão está na tela: mostra a figura do slide que ela usa.
+   * Sem ele, a cena fica no último passo da fase.
+   */
+  cena?: EstadoCena
 }
 
 export type Questao = QuestaoEscolha | QuestaoClassificar | QuestaoDigitar
@@ -84,6 +103,8 @@ export type Fase = {
   Cena: ComponentType<CenaProps>
   /** Posição inicial da câmera [x, y, z]. */
   camera: [number, number, number]
+  /** Para onde a câmera olha (padrão: [0, 0.6, 0]). */
+  alvoCamera?: [number, number, number]
   passos: Passo[]
   desafio: Questao[]
 }

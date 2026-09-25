@@ -365,6 +365,7 @@ O identificador é a parte que "sobra" do IP depois do AND, sem os zeros do fim.
     {
       tipo: 'escolha',
       enunciado: 'Na figura do slide, quais hosts se comunicam diretamente?',
+      cena: { modo: 'mascara' },
       opcoes: ['192.168.10.1 e 192.168.10.2', '192.168.10.2 e 172.16.10.1', '192.168.10.1 e 172.16.10.1', 'Os três, porque estão no mesmo cabo'],
       correta: 0,
       explicacao: '> Apenas *hosts* na mesma sub-rede se comunicam diretamente.\n\nOs dois 192.168.10.x estão na sub-rede 192.168.10.0; o 172.16.10.1 está na 172.16.0.0. Estar no mesmo cabo não basta.',
@@ -610,10 +611,10 @@ O slide resolve "Calcule o endereço de rede e *broadcast* sabendo que há um *h
 1. Escreve a máscara /19 e o IP um embaixo do outro: \`255·255·111|00000·00000000\` e \`172·28·011|00100·00000000\`
 2. Marca a divisa **Parte Rede | Parte Host**
 3. Copia a parte rede do IP e troca cada bit da parte host por **H**: \`172·28·011HHHHH·HHHHHHHH\`
-4. **End. Rede**: H's = 0 → \`011|00000\` = 96 → **172.28.96.0/19**
+4. **End. Rede** (o endereço da sub-rede): H's = 0 → \`011|00000\` = 96 → **172.28.96.0/19**
 5. **End. Broadcast**: H's = 1 → \`011|11111\` = 127 → **172.28.127.255/19**
 
-As linhas da cena aparecem nessa ordem. O octeto dividido fica com a faixa amarela.`,
+O "endereço de rede" do slide é o mesmo **endereço da sub-rede** do resto da aula. As linhas da cena aparecem nessa ordem. O octeto dividido fica com a faixa amarela.`,
       fonte: p2(4),
       cena: { modo: 'hs', ip: '172.28.100.0', pref: 19 },
     },
@@ -624,7 +625,7 @@ Agora o corte cai no **4º octeto** (27 = 24 + 3):
 
 - IP: 42 = \`001|01010\`
 - H's: \`001HHHHH\`
-- Rede (H=0): \`001|00000\` = 32 → **34.72.250.32/27**
+- Sub-rede (H=0): \`001|00000\` = 32 → **34.72.250.32/27**
 - Broadcast (H=1): \`001|11111\` = 63 → **34.72.250.63/27**`,
       fonte: p2(4),
       cena: { modo: 'hs', ip: '34.72.250.42', pref: 27 },
@@ -636,7 +637,7 @@ Agora o corte cai no **4º octeto** (27 = 24 + 3):
 
 - IP: 201 = \`11001|001\`
 - H's: \`11001HHH\`
-- Rede (H=0): \`11001|000\` = 200 → **10.100.230.200/29**
+- Sub-rede (H=0): \`11001|000\` = 200 → **10.100.230.200/29**
 - Broadcast (H=1): \`11001|111\` = 207 → **10.100.230.207/29**`,
       fonte: p3(1),
       cena: { modo: 'hs', ip: '10.100.230.201', pref: 29 },
@@ -647,7 +648,7 @@ Agora o corte cai no **4º octeto** (27 = 24 + 3):
 O exercício **G** do slide: IP **130.14.10.1/16**. Com /16 a divisa cai certinho depois do 2º octeto, então nem precisa de binário:
 
 - parte rede: 130.14 (copia)
-- Rede: host todo 0 → **130.14.0.0**
+- Sub-rede: host todo 0 → **130.14.0.0**
 - Broadcast: host todo 1 → **130.14.255.255**`,
       fonte: p2(3),
       cena: { modo: 'hs', ip: '130.14.10.1', pref: 16 },
@@ -678,7 +679,7 @@ O exercício **G** do slide: IP **130.14.10.1/16**. Com /16 a divisa cai certinh
     ),
     {
       tipo: 'escolha',
-      enunciado: "No método dos H's, o endereço de rede é obtido fazendo…",
+      enunciado: "No método dos H's, o endereço da sub-rede (End. Rede, no slide) é obtido fazendo…",
       opcoes: ["H's = 0", "H's = 1", 'Somando 1 aos H\'s', "Trocando os H's pela máscara"],
       correta: 0,
       explicacao: "Slide: **End. Rede → H's = 0** e **End. Broadcast → H's = 1**.",

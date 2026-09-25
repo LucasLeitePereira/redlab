@@ -29,24 +29,31 @@ export function Chefao({ trilha }: { trilha: Trilha }) {
   const [rodada, setRodada] = useState(0)
   const questoes = useMemo(() => sortear(trilha), [trilha, rodada])
 
+  const [questao, setQuestao] = useState<Questao | null>(null)
+
   function comecar(m: Modo) {
     setRodada((r) => r + 1)
+    setQuestao(null)
     setModo(m)
   }
 
   const voltar = () => (trilha.gerador ? setModo('menu') : ir(`/trilha/${trilha.id}`))
 
-  // Fundo: a cena da última fase, no estado do seu último passo.
+  // Fundo: a cena da fase de onde veio a questão da vez, no estado que a questão pede (ou
+  // no último passo da fase). Fora da revisão e nas questões extras, a última fase.
+  const faseDe = useMemo(() => new Map(trilha.fases.flatMap((f) => f.desafio.map((q) => [q, f] as const))), [trilha])
   const ultima = trilha.fases[trilha.fases.length - 1]
-  const estado = [...ultima.passos].reverse().find((p) => p.cena)?.cena ?? {}
-  const Cena = ultima.Cena
+  const daFase = modo === 'revisao' && questao ? faseDe.get(questao) : undefined
+  const fase = daFase ?? ultima
+  const estado = (daFase && questao?.cena) || [...fase.passos].reverse().find((p) => p.cena)?.cena || {}
+  const Cena = fase.Cena
   const etiqueta = `Chefão da Trilha ${trilha.numero}`
   const melhor = chefoes[trilha.id]
 
   return (
     <div className="tela">
       <div className="ceu">
-        <Palco camera={ultima.camera}>
+        <Palco key={fase.id} camera={fase.camera} alvo={fase.alvoCamera} versao={estado}>
           <Cena estado={estado} revelados={[]} alvos={[]} onRevelar={() => {}} />
         </Palco>
       </div>
@@ -100,6 +107,7 @@ export function Chefao({ trilha }: { trilha: Trilha }) {
           questoes={questoes}
           onFim={(r) => registrarChefao(trilha.id, r)}
           onSair={voltar}
+          onQuestao={setQuestao}
         />
       )}
 

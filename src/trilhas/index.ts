@@ -2,6 +2,7 @@ import type { Trilha } from '../engine/tipos'
 import { trilha1 } from './t1/conteudo'
 import { trilha2 } from './t2/conteudo'
 import { trilha3 } from './t3/conteudo'
+import { trilha4 } from './t4/conteudo'
 
 // Trilhas ainda não construídas aparecem no mapa como "em breve" (ver redes/PLANO.md).
 const emBreve = (numero: number, titulo: string, aula: string, cor: string): Trilha => ({
@@ -19,8 +20,9 @@ export const TRILHAS: Trilha[] = [
   trilha1,
   trilha2,
   trilha3,
-  emBreve(4, 'Usando a rede', 'Aula 04', '#e9a620'),
+  trilha4,
   emBreve(5, 'Modelo OSI', 'Aula 05 p1', '#7458c4'),
+  emBreve(6, 'TCP/IP e 5 camadas', 'Aula 05 p2–p3', '#17a2a2'),
 ]
 
 export const acharTrilha = (id: string) => TRILHAS.find((t) => t.id === id)

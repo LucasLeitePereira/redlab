@@ -4,8 +4,8 @@ import { Palco } from '../three/base'
 import { Desafio } from './Desafio'
 import { BarraPassos, Painel } from './Painel'
 import { useProgresso } from './progresso'
-import { CaixaNota, FonteChip, Texto } from './Texto'
-import type { EstadoCena, Fase, Trilha } from './tipos'
+import { CaixaNota, FonteChip, inline, Texto } from './Texto'
+import type { EstadoCena, Fase, Questao, Trilha } from './tipos'
 
 export function FasePlayer({ trilha, fase }: { trilha: Trilha; fase: Fase }) {
   const [passo, setPasso] = useState(0)
@@ -21,12 +21,16 @@ export function FasePlayer({ trilha, fase }: { trilha: Trilha; fase: Fase }) {
   const alvos = explorar ? Object.keys(explorar.alvos) : []
   const faltam = alvos.filter((id) => !revelados.includes(id)).length
 
-  // Durante o desafio, a cena fica no estado do último passo que definiu um.
+  const [questao, setQuestao] = useState<Questao | null>(null)
+
+  // Durante o desafio, a cena mostra o que a questão pede; se ela não diz nada,
+  // fica no estado do último passo que definiu um.
   const estado: EstadoCena = useMemo(() => {
+    if (modo === 'desafio' && questao?.cena) return questao.cena
     const ate = modo === 'desafio' ? fase.passos.length - 1 : passo
     for (let i = ate; i >= 0; i--) if (fase.passos[i].cena) return fase.passos[i].cena!
     return {}
-  }, [fase, passo, modo])
+  }, [fase, passo, modo, questao])
 
   function irPara(n: number) {
     setPasso(n)
@@ -47,7 +51,7 @@ export function FasePlayer({ trilha, fase }: { trilha: Trilha; fase: Fase }) {
   return (
     <div className="tela">
       <div className="ceu">
-        <Palco key={fase.id} camera={fase.camera} versao={versaoCena}>
+        <Palco key={fase.id} camera={fase.camera} alvo={fase.alvoCamera} versao={versaoCena}>
           <Cena estado={estado} revelados={revelados} alvos={alvos} onRevelar={revelar} />
         </Palco>
       </div>
@@ -66,6 +70,7 @@ export function FasePlayer({ trilha, fase }: { trilha: Trilha; fase: Fase }) {
           etiqueta={`${etiqueta} · Desafio`}
           titulo={fase.titulo}
           questoes={fase.desafio}
+          onQuestao={setQuestao}
           onFim={(r) => registrar(fase.id, r)}
           onSair={() => ir(proxima ? `/fase/${trilha.id}/${proxima.id}` : `/chefao/${trilha.id}`)}
         />
@@ -108,7 +113,7 @@ export function FasePlayer({ trilha, fase }: { trilha: Trilha; fase: Fase }) {
                   return visto ? (
                     <div key={id} className={`explorar-item ${ultimo === id ? 'novo' : ''}`}>
                       <b>{alvo.titulo}</b>
-                      {alvo.texto}
+                      {inline(alvo.texto)}
                     </div>
                   ) : (
                     <div key={id} className="explorar-item oculto">? Ainda não descoberto</div>

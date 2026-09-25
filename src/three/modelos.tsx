@@ -3,14 +3,23 @@ import { Suspense, useRef } from 'react'
 import type { Group } from 'three'
 import { Caixa, Cilindro, Esfera, SombraFalsa, type V3 } from './base'
 import { ComputadorKenney, NotebookKenney } from './kenney'
+import { TelefonePoly } from './poly'
 import { material, toroEngrenagem } from './recursos'
 
 type Posicionado = { pos?: V3; rot?: V3; escala?: number }
 
 const TELA_AZUL = '#5fb2f5'
 
-export function Computador({ pos, rot, escala = 1, tela = TELA_AZUL, apagado }: Posicionado & { tela?: string; apagado?: boolean }) {
+export function Computador({
+  pos,
+  rot,
+  escala = 1,
+  tela = TELA_AZUL,
+  apagado,
+  gabinete = 'direita',
+}: Posicionado & { tela?: string; apagado?: boolean; gabinete?: 'direita' | 'esquerda' }) {
   const cor = apagado ? '#b9c0c8' : '#e3e8ee'
+  const xGabinete = gabinete === 'direita' ? 0.95 : -0.95
   // monitor próprio: aparece só enquanto o modelo do Kenney carrega
   const monitor = (
     <>
@@ -25,8 +34,8 @@ export function Computador({ pos, rot, escala = 1, tela = TELA_AZUL, apagado }: 
     <group position={pos} rotation={rot} scale={escala}>
       <Suspense fallback={monitor}><ComputadorKenney tela={tela} apagado={apagado} /></Suspense>
       {/* o Kenney não tem gabinete: fica o próprio */}
-      <Caixa tam={[0.42, 0.9, 0.85]} pos={[0.95, 0.45, -0.1]} cor={cor} />
-      <Esfera raio={0.035} pos={[0.95, 0.75, 0.33]} cor="#39d97a" emissivo="#39d97a" intensidade={1.2} sombra={false} />
+      <Caixa tam={[0.42, 0.9, 0.85]} pos={[xGabinete, 0.45, -0.1]} cor={cor} />
+      <Esfera raio={0.035} pos={[xGabinete, 0.75, 0.33]} cor="#39d97a" emissivo="#39d97a" intensidade={1.2} sombra={false} />
     </group>
   )
 }
@@ -269,9 +278,18 @@ export function Roteador({ pos, rot, escala = 1, cor = '#3b6fb5' }: Posicionado 
 }
 
 /** Telefone fixo de mesa (a comutação por circuitos nasceu na telefonia). */
+/** Telefone de mesa (modelo do Poly Pizza); `cor` só vale para o próprio, que aparece enquanto ele carrega. */
 export function Telefone({ pos, rot, escala = 1, cor = '#2f7fd0' }: Posicionado & { cor?: string }) {
   return (
     <group position={pos} rotation={rot} scale={escala}>
+      <Suspense fallback={<TelefoneProprio cor={cor} />}><TelefonePoly /></Suspense>
+    </group>
+  )
+}
+
+function TelefoneProprio({ cor }: { cor: string }) {
+  return (
+    <group>
       <Caixa tam={[0.8, 0.3, 0.7]} pos={[0, 0.15, 0]} cor={cor} />
       <Caixa tam={[0.4, 0.02, 0.36]} pos={[0.12, 0.31, 0.1]} cor="#f4f6f8" sombra={false} />
       <Caixa tam={[0.2, 0.16, 0.8]} pos={[-0.27, 0.4, 0]} cor={cor} />
