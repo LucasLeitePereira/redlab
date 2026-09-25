@@ -243,6 +243,7 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 .texto ul, .texto ol { margin: 0 0 12px; padding-left: 20px; }
 .citacao ul { margin: 0; }
 .citacao li:last-child { margin-bottom: 0; }
+.citacao > p { margin: 0 0 6px; }
 .texto li { margin-bottom: 6px; }
 .texto strong { font-weight: 900; }
 .texto em { font-style: italic; }
@@ -781,3 +782,18 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 
 /* URLs e nomes longos (ex.: nota da URL na fase 4.6) quebram em vez de criar rolagem lateral */
 .painel-corpo { overflow-wrap: break-word; }
+
+/* ---------- Trilha 5: RM-OSI ---------- */
+
+.rotulo.papel { border-radius: 8px; font-family: var(--mono); font-size: 12px; font-weight: 700; white-space: pre; text-align: left; line-height: 1.35; padding: 5px 9px; }
+.rotulo.papel small { display: block; margin: 3px 0 0; font-family: var(--fonte); font-size: 11px; }
+.rotulo.camada-osi { background: none; box-shadow: none; padding: 0; color: #fff; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.rotulo.camada-osi.cinza { color: #97a0a9; text-shadow: none; }
+.rotulo.barra-download { border-radius: 12px; padding: 6px 10px; width: 210px; white-space: nowrap; }
+.barra-download .legenda { font-size: 12.5px; margin-bottom: 5px; }
+.barra-download .trilho { height: 10px; border-radius: 5px; background: var(--borda); overflow: hidden; }
+.barra-download .cheio { height: 100%; width: 0; background: var(--verde); }
+.pilha-osi { display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.92); box-shadow: var(--sombra); font-family: var(--fonte); pointer-events: none; }
+.pilha-osi-titulo { font-size: 13px; font-weight: 800; color: var(--azul-escuro); margin-bottom: 2px; }
+.pilha-osi .camada { width: 150px; padding: 5px 8px; border-radius: 6px; background: #d5d9de; color: #97a0a9; font-weight: 900; font-size: 11.5px; letter-spacing: 0.8px; text-transform: uppercase; text-align: center; }
+.pilha-osi .camada.ativa { color: #fff; }

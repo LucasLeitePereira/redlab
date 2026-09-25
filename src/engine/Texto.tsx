@@ -28,10 +28,13 @@ export function Texto({ children }: { children: string }) {
         }
         if (linhas.every((l) => l.startsWith('> '))) {
           const dentro = linhas.map((l) => l.slice(2))
-          if (dentro.every((l) => l.startsWith('- '))) {
+          // Lista na citação, com uma frase de abertura opcional ("> A estrutura … para:").
+          const inicio = dentro.findIndex((l) => l.startsWith('- '))
+          if (inicio >= 0 && dentro.slice(inicio).every((l) => l.startsWith('- '))) {
             return (
               <div key={i} className="citacao">
-                <ul>{dentro.map((l, j) => <li key={j}>{inline(l.slice(2))}</li>)}</ul>
+                {inicio > 0 && <p>{inline(dentro.slice(0, inicio).join(' '))}</p>}
+                <ul>{dentro.slice(inicio).map((l, j) => <li key={j}>{inline(l.slice(2))}</li>)}</ul>
               </div>
             )
           }
