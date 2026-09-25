@@ -1,6 +1,6 @@
-import { Alvo, Caixa, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
+import { Alvo, Caixa, Ilha, Lote, Rotulo } from '../../../three/base'
 import { Celular, Computador, EstacaoBase, Notebook, PlacaDeRede, PontoDeAcesso } from '../../../three/modelos'
-import { Cabo, Ondas, Pulsos, useCurva } from '../../../three/movimento'
+import { Cabo, cantosSuaves, Ondas, Pulsos, useCurva } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
 
 // Fase 1.2 — meios de transmissão (Aula 01, p. 3). Três "ruas" lado a lado:
@@ -28,7 +28,8 @@ function Guiado({ faixa, cor, raio, pulso, alongado, duracao, rotulo, sub, apaga
   foco: boolean
 }) {
   const z = Z[faixa]
-  const pontos: V3[] = [[-3.0, 0.16, z + 0.4], [-1, 0.16, z + 0.9], [1.6, 0.16, z + 0.9], [3.6, 0.16, z + 0.4]]
+  // sai da frente de um gabinete, corre reto na frente das mesas e entra no outro
+  const pontos = cantosSuaves([[-3.59, 0.16, z + 0.3], [-3.59, 0.16, z + 1.25], [5.01, 0.16, z + 1.25], [5.01, 0.16, z + 0.3]], 0.4)
   const curva = useCurva(pontos)
   return (
     <group>

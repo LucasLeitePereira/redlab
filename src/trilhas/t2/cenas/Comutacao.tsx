@@ -1,6 +1,7 @@
 import { Arvore, Caixa, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
 import { Ligacao } from '../../../three/Ligacao'
-import { Caminhao, Computador, Telefone } from '../../../three/modelos'
+import { Computador, Telefone } from '../../../three/modelos'
+import { Dado } from '../../../three/dados'
 import { Janela, linhaDoTempo, Percurso, Pulsos, useCurva } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
 
@@ -97,7 +98,7 @@ function Circuitos() {
       <Rotulo pos={[0, 1.4, -2.9]} escuro>Circuito reservado de ponta a ponta</Rotulo>
       {/* outra ligação querendo usar o enlace n2–n4: fica esperando */}
       <group position={[espera[0] - 0.9, 0.12, espera[2] + 1.3]} rotation={[0, Math.PI * 0.8, 0]} scale={0.8}>
-        <Caminhao cor="#8e99a6" carga="#d3dae2" />
+        <Dado cor="#8e99a6" tipo="voz" />
       </group>
       <Rotulo pos={[espera[0] - 0.9, 1.0, espera[2] + 1.3]}>⛔ Esperando: canal ocupado</Rotulo>
     </>
@@ -134,9 +135,11 @@ function Mensagens({ perda }: { perda?: boolean }) {
         )
       })}
       <Percurso pontos={pontos} velocidade={velocidade} espera={espera} periodo={periodo}>
-        {/* a mensagem inteira: um bloco comprido, maior que um pacote */}
-        <Caixa tam={[0.5, 0.34, 1.5]} pos={[0, 0.42, 0]} cor="#e0463f" sombra={false} />
-        {!perda && <Rotulo pos={[0, 0.95, 0]}>Mensagem</Rotulo>}
+        {/* a mensagem inteira: o mesmo vídeo dos pacotes, mas num dado só, bem maior que um pacote */}
+        <group scale={1.7}>
+          <Dado cor="#e0463f" tipo="video" />
+        </group>
+        {!perda && <Rotulo pos={[0, 1.25, 0]}>Mensagem</Rotulo>}
       </Percurso>
       {!perda && (
         <Janela periodo={periodo} de={total} ate={periodo}>
@@ -189,7 +192,7 @@ function Pacotes({ outros }: { outros?: boolean }) {
             periodo={PERIODO_PACOTES}
           >
             <group scale={0.7}>
-              <Caminhao cor={CORES_PACOTE[i]} carga={CORES_PACOTE[i]} />
+              <Dado cor={CORES_PACOTE[i]} tipo="video" />
             </group>
             <Rotulo pos={[0, 0.75, 0]}>{i + 1}</Rotulo>
           </Percurso>

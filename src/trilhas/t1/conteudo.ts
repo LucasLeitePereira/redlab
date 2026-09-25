@@ -21,7 +21,7 @@ const fase11: Fase = {
     {
       titulo: 'Bem-vindo à Cidade de Dados',
       texto: `
-Nesta cidade, cada computador é uma casa e cada mensagem viaja num caminhãozinho. Gire a câmera arrastando o mouse e use a rodinha para aproximar.
+Nesta cidade, cada computador é uma casa. Pelos cabos viajam os **dados**: cada ícone mostra o tipo (mensagem, música, documento, vídeo, foto, e-mail, voz). Gire a câmera arrastando o mouse e use a rodinha para aproximar.
 
 A definição do professor:
 
@@ -336,7 +336,7 @@ O slide separa os protocolos em **dois níveis**.`,
     {
       titulo: 'Os dois níveis trabalham juntos',
       texto: `
-Acompanhe o envelope: ele sai do programa, **desce** até a placa de rede, atravessa o cabo e **sobe** até o programa do outro lado.
+Acompanhe a mensagem: ela sai do programa, **desce** até a placa de rede, atravessa o cabo e **sobe** até o programa do outro lado.
 
 Cada nível conversa com o seu **par** do outro lado: aplicação com aplicação e dispositivo com dispositivo.
 
@@ -423,7 +423,7 @@ São 4 tipos de arquitetura:
 - ❸ Distribuída
 - ❹ Colaborativa
 
-A pergunta-chave para diferenciar é **quem processa**. Na cena, a **engrenagem girando** marca quem está processando. Caminhão vermelho é **pedido** e caminhão azul é **resposta**.`,
+A pergunta-chave para diferenciar é **quem processa**. Na cena, a **engrenagem girando** marca quem está processando. Dado vermelho é **pedido** e dado azul é **resposta**.`,
       fonte: f(5),
       cena: { arq: 'centralizada' },
     },

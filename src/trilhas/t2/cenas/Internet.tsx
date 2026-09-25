@@ -53,9 +53,9 @@ export function CenaInternet(cena: CenaProps) {
           key={i}
           pontos={[
             [ROTEADORES[a][0], 0.16, ROTEADORES[a][2]],
-            [(ROTEADORES[a][0] + ROTEADORES[b][0]) * 0.42, 0.16, (ROTEADORES[a][2] + ROTEADORES[b][2]) * 0.42],
             [ROTEADORES[b][0], 0.16, ROTEADORES[b][2]],
           ]}
+          surgir={0.1}
           raio={internet ? 0.08 : 0.06}
           cor={internet ? '#2f5fb0' : '#7d95b8'}
           viagens={[

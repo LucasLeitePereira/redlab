@@ -1,37 +1,63 @@
-import { Arvore, Caixa, Cilindro, Esfera, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
+import { useMemo } from 'react'
+import { Arvore, Caixa, Cilindro, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
 import { Ligacao } from '../../../three/Ligacao'
-import { Caminhao, Computador } from '../../../three/modelos'
-import { Janela, linhaDoTempo, Percurso } from '../../../three/movimento'
+import { Computador } from '../../../three/modelos'
+import { Chegada, Dado, type Sequencia } from '../../../three/dados'
+import { cantosSuaves, Janela, linhaDoTempo, Percurso } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
 
 // Fase 2.3 — quantidade de conexões e endereçamento (Aula 02, p. 7–10).
 // "ponto": enlaces dedicados em fila (A–B–C), com B como nó intermediário.
 // "difusao": um único cabo (barramento) compartilhado; o sinal chega a todos.
 // "unicast" / "multicast" / "broadcast": o mesmo barramento dos desenhos do slide,
-// com A enviando e só os destinatários certos acendendo a tela.
+// com A enviando e o aviso de chegada (ícone com ✓) só na tela dos destinatários certos.
 
 const Y = 0.16
-const TELA_OK = '#5ee08a'
-
-/** Brilho verde na tela de quem recebeu (a tela do Computador fica a 0.8 de altura, escala 0.8). */
-function Recebeu({ x, z, periodo, de }: { x: number; z: number; periodo: number; de: number }) {
-  return (
-    <Janela periodo={periodo} de={de} ate={periodo}>
-      <Caixa tam={[0.9, 0.56, 0.03]} pos={[x, 0.12 + 0.64, z + 0.07]} cor={TELA_OK} emissivo={TELA_OK} intensidade={0.9} sombra={false} />
-    </Janela>
-  )
+/**
+ * Aviso de chegada: o ícone do que chegou, com selo verde, salta bem na frente da tela de quem
+ * recebeu (a tela do Computador fica a 0,76 de altura, escala 0.8). A `sequencia` é a do dado enviado.
+ */
+function Recebeu({ x, z, periodo, de, cor, sequencia }: { x: number; z: number; periodo: number; de: number; cor?: string; sequencia: Sequencia }) {
+  return <Chegada pos={[x, 0.78, z + 0.32]} periodo={periodo} de={de} cor={cor} sequencia={sequencia} escala={0.95} />
 }
 
 // ---------- Ponto a ponto ----------
 
 const PP: V3[] = [[-4.6, 0.12, -0.4], [0, 0.12, -0.4], [4.6, 0.12, -0.4]]
-const PP_CABO = PP.map(([x, , z]): V3 => [x, Y, z + 0.9])
+const Z_TOMADA = 0.5
+const Z_CORREDOR = 1.05
+/** Portas de rede: A tem uma, C tem uma e B tem duas (uma para cada enlace dedicado). */
+const PORTA_A = PP[0][0] + 0.4
+const PORTA_B1 = PP[1][0] - 0.5
+const PORTA_B2 = PP[1][0] + 0.5
+const PORTA_C = PP[2][0] - 0.4
+
+/** Cabo de uma porta até outra: sai para a frente, corre reto e entra na outra porta (cantos arredondados). */
+function caboPP(de: number, para: number): V3[] {
+  return cantosSuaves([[de, Y, Z_TOMADA], [de, Y, Z_CORREDOR], [para, Y, Z_CORREDOR], [para, Y, Z_TOMADA]], 0.3)
+}
+
+/** Tomada no chão com uma porta escura para cada cabo. */
+function Tomada({ x, portas }: { x: number; portas: number[] }) {
+  const largura = Math.max(...portas.map((p) => Math.abs(p - x))) * 2 + 0.4
+  return (
+    <>
+      <Caixa tam={[largura, 0.08, 0.4]} pos={[x, 0.1, Z_TOMADA]} cor="#dfe4ea" />
+      {portas.map((px) => (
+        <Caixa key={px} tam={[0.2, 0.14, 0.2]} pos={[px, 0.16, Z_TOMADA]} cor="#2d3540" sombra={false} />
+      ))}
+    </>
+  )
+}
 
 function PontoAPonto() {
-  const velocidade = 2.6
+  // o dado vai pelo cabo A–B, B guarda e repassa, e ele segue pelo outro cabo até C
+  const trecho = 1.9
   const espera = 0.9
-  const { chegadas, total } = linhaDoTempo(PP_CABO, velocidade, espera)
-  const periodo = total + 1.6
+  const saiDeB = trecho + espera
+  const chegaEmC = saiDeB + trecho
+  const periodo = chegaEmC + 1.6
+  const sequencia = useMemo<Sequencia>(() => ({ indice: 0 }), [])
   return (
     <>
       {PP.map((p, i) => (
@@ -44,17 +70,16 @@ function PontoAPonto() {
           </Rotulo>
         </group>
       ))}
-      <Ligacao pontos={[PP_CABO[0], PP_CABO[1]]} raio={0.08} />
-      <Ligacao pontos={[PP_CABO[1], PP_CABO[2]]} raio={0.08} />
-      <Rotulo pos={[-2.3, 0.7, 0.5]}>enlace dedicado A–B</Rotulo>
-      <Rotulo pos={[2.3, 0.7, 0.5]}>enlace dedicado B–C</Rotulo>
-      <Percurso pontos={PP_CABO} velocidade={velocidade} espera={espera} periodo={periodo}>
-        <group scale={0.8}>
-          <Caminhao />
-        </group>
-      </Percurso>
-      <Recebeu x={PP[2][0]} z={PP[2][2]} periodo={periodo} de={chegadas[2]} />
-      <Janela periodo={periodo} de={chegadas[1]} ate={chegadas[1] + espera}>
+      {/* dois cabos de verdade: cada um liga só um par e termina numa porta própria */}
+      <Tomada x={PP[0][0]} portas={[PORTA_A]} />
+      <Tomada x={PP[1][0]} portas={[PORTA_B1, PORTA_B2]} />
+      <Tomada x={PP[2][0]} portas={[PORTA_C]} />
+      <Ligacao pontos={caboPP(PORTA_A, PORTA_B1)} raio={0.08} surgir={0.08} viagens={[{ duracao: trecho, pausa: periodo - trecho, sequencia, conduz: true }]} />
+      <Ligacao pontos={caboPP(PORTA_B2, PORTA_C)} raio={0.08} surgir={0.08} viagens={[{ duracao: trecho, atraso: saiDeB, pausa: periodo - trecho, sequencia }]} />
+      <Rotulo pos={[-2.3, 0.7, Z_CORREDOR + 0.4]}>enlace dedicado A–B</Rotulo>
+      <Rotulo pos={[2.3, 0.7, Z_CORREDOR + 0.4]}>enlace dedicado B–C</Rotulo>
+      <Recebeu x={PP[2][0]} z={PP[2][2]} periodo={periodo} de={chegaEmC} sequencia={sequencia} />
+      <Janela periodo={periodo} de={trecho} ate={saiDeB}>
         <Rotulo pos={[0, 2.3, -0.4]}>B repassa para C</Rotulo>
       </Janela>
     </>
@@ -80,6 +105,8 @@ function Barramento({ modo }: { modo: string }) {
     [XS[d], Y, Z_PC - 0.2],
   ])
   const difusao = modo === 'difusao'
+  // todas as cópias e todos os avisos mostram o mesmo tipo: a primeira cópia conduz a sequência
+  const sequencia = useMemo<Sequencia>(() => ({ indice: 0 }), [])
 
   return (
     <>
@@ -107,16 +134,16 @@ function Barramento({ modo }: { modo: string }) {
         <>
           {/* O sinal entra no cabo e se espalha para os dois lados: todos recebem. */}
           <Percurso pontos={[[XS[0], Y + 0.12, Z_PC - 0.2], [XS[0], Y + 0.12, Z_BARRA], [-PONTA, Y + 0.12, Z_BARRA]]} velocidade={velocidade} periodo={periodo}>
-            <Esfera raio={0.2} cor="#ffd23f" emissivo="#ffd23f" intensidade={1.2} sombra={false} />
+            <group scale={0.8}><Dado cor="#e0463f" sequencia={sequencia} conduz /></group>
           </Percurso>
           {[1, 2, 3].map((d) => {
             const rota: V3[] = [[XS[0], Y + 0.12, Z_PC - 0.2], [XS[0], Y + 0.12, Z_BARRA], [XS[d], Y + 0.12, Z_BARRA], [XS[d], Y + 0.12, Z_PC - 0.2]]
             return (
               <group key={d}>
                 <Percurso pontos={rota} velocidade={velocidade} periodo={periodo}>
-                  <Esfera raio={0.2} cor="#ffd23f" emissivo="#ffd23f" intensidade={1.2} sombra={false} />
+                  <group scale={0.8}><Dado cor="#e0463f" sequencia={sequencia} /></group>
                 </Percurso>
-                <Recebeu x={XS[d]} z={Z_PC} periodo={periodo} de={linhaDoTempo(rota, velocidade, 0).total} />
+                <Recebeu x={XS[d]} z={Z_PC} cor="#e0463f" periodo={periodo} de={linhaDoTempo(rota, velocidade, 0).total} sequencia={sequencia} />
               </group>
             )
           })}
@@ -128,10 +155,10 @@ function Barramento({ modo }: { modo: string }) {
             <group key={i}>
               <Percurso pontos={rota} velocidade={velocidade} periodo={periodo}>
                 <group scale={0.8}>
-                  <Caminhao cor="#e0463f" />
+                  <Dado cor="#e0463f" sequencia={sequencia} conduz={i === 0} />
                 </group>
               </Percurso>
-              <Recebeu x={XS[destinos[i]]} z={Z_PC} periodo={periodo} de={linhaDoTempo(rota, velocidade, 0).total} />
+              <Recebeu x={XS[destinos[i]]} z={Z_PC} cor="#e0463f" periodo={periodo} de={linhaDoTempo(rota, velocidade, 0).total} sequencia={sequencia} />
             </group>
           ))}
           <Rotulo pos={[0, 2.6, -2.4]} escuro>

@@ -1,12 +1,12 @@
+import { Line } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type RefObject } from 'react'
 import { Quaternion, Vector3, type Group } from 'three'
 import { Arvore, Caixa, Cilindro, Esfera, Fixo, Ilha, Rotulo, useAtualizarSombras, type V3 } from '../../../three/base'
-import { Ligacao } from '../../../three/Ligacao'
+import { emSequencia, Ligacao } from '../../../three/Ligacao'
 import {
   Celular,
   Computador,
-  Envelope,
   Impressora,
   Notebook,
   PontoDeAcesso,
@@ -14,13 +14,14 @@ import {
   Servidor,
   Switch,
 } from '../../../three/modelos'
-import { arco, Ondas, useCurva, Viajante } from '../../../three/movimento'
+import { arco, cantosSuaves, Ondas, useCurva, Viajante } from '../../../three/movimento'
 import { esferaUnitaria, material } from '../../../three/recursos'
 import type { CenaProps } from '../../../engine/tipos'
+import { Dado } from '../../../three/dados'
 
 // Fase 2.1 — abrangência (Aula 02, p. 2–5). "Potências de dez": cada nível da tabela do
 // slide (mesa → planeta) é uma maquete, e o nível anterior fica encaixado dentro do
-// seguinte, R vezes menor. Afastar a câmera = passar de uma maquete para a de fora.
+// seguinte, R vezes menor (a casa é exceção: ver REDUCAO_CASA). Afastar a câmera = passar de uma maquete para a de fora.
 
 const R = 7
 const CHAO = '#a9d18e'
@@ -38,6 +39,8 @@ type Nivel = {
   cor: string
   /** Onde o nível anterior fica encaixado dentro deste (coordenadas deste nível). */
   encaixe?: V3
+  /** Quantas vezes o nível anterior encolhe ao entrar neste (padrão: R). */
+  reducao?: number
   Conteudo: ComponentType<NivelProps>
 }
 
@@ -90,7 +93,8 @@ function Mesa({ semFio }: NivelProps) {
   const bt = semFio === 'wpan'
   return (
     <>
-      <Ilha raio={8} cor="#e3cfa8" />
+      {/* o chão da maquete tem a cor do piso da casa: encaixada no escritório, ela some no piso */}
+      <Ilha raio={7} cor={PISO_CASA} />
       <Caixa tam={[8.6, 0.04, 5.2]} pos={[0, 0.02, 0.6]} cor="#8fa9cf" sombra={false} />
       <Caixa tam={[6.4, 0.22, 2.8]} pos={[0, 2.2, -0.9]} cor="#b07a4f" />
       {[[-3, -2.1], [3, -2.1], [-3, 0.3], [3, 0.3]].map(([x, z], i) => (
@@ -125,33 +129,102 @@ function Mesa({ semFio }: NivelProps) {
 
 // ---------- 70 metros · Casa ----------
 
+// A mesa entra aqui só REDUCAO_CASA vezes menor (e não R): assim o tampo fica a ~0,5 unidade do piso,
+// e 1 unidade ≈ 1,5 m. Os móveis seguem essa escala para a mesa não parecer de brinquedo no cômodo.
+// O disco da maquete da mesa (raio 7 / REDUCAO_CASA) cabe dentro das paredes externas da casa.
+const PISO_CASA = '#eadfc9'
+const REDUCAO_CASA = 4.5
+const ENCAIXE_MESA: V3 = [-2.0, 0.145, -1.4]
+/** Um ponto da maquete da mesa nas coordenadas da casa. */
+const naCasa = (p: V3): V3 => p.map((v, i) => ENCAIXE_MESA[i] + v / REDUCAO_CASA) as V3
+const ROTEADOR_CASA: V3 = [3.25, 0.62, -2.7]
+/** Aparelhos que conversam com o roteador pelo ar: [ponto da antena/tela, altura do arco, duração]. */
+const SEM_FIO_CASA: [V3, number, number][] = [
+  [naCasa([-0.8, 3.7, -1.5]), 0.9, 2.2], // monitor do computador da mesa (a maquete encaixada no escritório)
+  [[1.6, 0.74, -2.76], 0.45, 1.3], // TV
+  [[1.6, 0.55, -1.45], 0.55, 1.3], // notebook na mesa de centro
+]
+
+/** Wi-Fi: o pacote vai do roteador até o aparelho pelo ar e volta (um por vez em cada link). */
+function LinkSemFio({ de, para, altura, duracao, atraso }: { de: V3; para: V3; altura: number; duracao: number; atraso: number }) {
+  const pontos = useMemo(() => arco(de, para, altura, 16), [de, para, altura])
+  const curva = useCurva(pontos)
+  const viagens = emSequencia([{ duracao, atraso }, { duracao, atraso: atraso + 0.1, inverso: true }], 0.5)
+  return (
+    <>
+      <Line points={pontos} color="#4aa8ff" lineWidth={1.5} dashed dashSize={0.12} gapSize={0.1} transparent opacity={0.45} />
+      {viagens.map((v, i) => (
+        <Viajante key={i} curva={curva} duracao={duracao} pausa={v.pausa} atraso={v.atraso} inverso={v.inverso} surgir={0.12}>
+          <group scale={0.4}>
+            <Dado cor="#4aa8ff" sombra={false} altura={0.1} inicio={Math.round(duracao * 10) + i * 3} />
+          </group>
+        </Viajante>
+      ))}
+    </>
+  )
+}
+
 function Casa() {
   const parede = '#f5f0e6'
+  const madeira = '#b07a4f'
   return (
     <>
       <Ilha raio={8} cor={CHAO} />
-      <Caixa tam={[10, 0.14, 7.2]} pos={[0.4, 0.07, -0.4]} cor="#eadfc9" sombra={false} />
-      <Caixa tam={[10, 1, 0.16]} pos={[0.4, 0.64, -4.0]} cor={parede} />
-      <Caixa tam={[0.16, 1, 7.2]} pos={[-4.6, 0.64, -0.4]} cor={parede} />
-      <Caixa tam={[0.16, 1, 7.2]} pos={[5.4, 0.64, -0.4]} cor={parede} />
-      <Caixa tam={[10, 0.3, 0.16]} pos={[0.4, 0.29, 3.2]} cor={parede} />
-      <Caixa tam={[0.16, 1, 4]} pos={[-0.4, 0.64, -2.0]} cor={parede} />
-      <Caixa tam={[3, 1, 0.16]} pos={[-3.1, 0.64, 0]} cor={parede} />
-      {/* sala: sofá, TV e o roteador */}
-      <Caixa tam={[2.4, 0.4, 0.9]} pos={[2.6, 0.34, 1.6]} cor="#d9774e" />
-      <Caixa tam={[2.4, 0.6, 0.25]} pos={[2.6, 0.6, 2.05]} cor="#c7653e" />
-      <Caixa tam={[2, 0.5, 0.5]} pos={[2.6, 0.39, -3.4]} cor="#8a5a3b" />
-      <Caixa tam={[2.2, 1.2, 0.08]} pos={[2.6, 1.25, -3.55]} cor="#23272e" />
-      <Caixa tam={[2, 1.05, 0.02]} pos={[2.6, 1.25, -3.5]} cor="#5fb2f5" emissivo="#5fb2f5" intensidade={0.5} sombra={false} />
-      <PontoDeAcesso pos={[4.6, 0.14, -3.3]} />
-      <Notebook pos={[1.2, 0.54, 0.5]} rot={[0, 0.5, 0]} escala={0.7} />
-      <Caixa tam={[1.2, 0.4, 0.8]} pos={[1.2, 0.34, 0.6]} cor="#b07a4f" />
-      {/* quarto */}
-      <Caixa tam={[1.8, 0.4, 2.4]} pos={[-2.8, 0.34, 1.6]} cor="#f0f0f0" />
-      <Caixa tam={[1.84, 0.1, 1.6]} pos={[-2.8, 0.59, 2.0]} cor="#6d9bd1" />
-      <Caixa tam={[1.2, 0.15, 0.4]} pos={[-2.8, 0.62, 0.65]} cor="#ffffff" />
+      {/* planta de ~11 × 8 m: escritório e quarto à esquerda, sala e cozinha à direita */}
+      <Caixa tam={[7.2, 0.14, 5.4]} pos={[0, 0.07, -0.3]} cor={PISO_CASA} sombra={false} />
+      <Caixa tam={[7.2, 0.9, 0.14]} pos={[0, 0.59, -3.0]} cor={parede} />
+      <Caixa tam={[0.14, 0.9, 5.4]} pos={[-3.6, 0.59, -0.3]} cor={parede} />
+      <Caixa tam={[0.14, 0.9, 5.4]} pos={[3.6, 0.59, -0.3]} cor={parede} />
+      <Caixa tam={[2.7, 0.3, 0.14]} pos={[-2.25, 0.29, 2.4]} cor={parede} />
+      <Caixa tam={[1.8, 0.3, 0.14]} pos={[2.7, 0.29, 2.4]} cor={parede} />
+      <Caixa tam={[1.4, 0.3, 0.14]} pos={[0.1, 0.29, 2.4]} cor={parede} />
+      <Caixa tam={[0.14, 0.9, 2]} pos={[-0.6, 0.59, -2.0]} cor={parede} />
+      <Caixa tam={[0.14, 0.9, 1.8]} pos={[-0.6, 0.59, 1.5]} cor={parede} />
+      <Caixa tam={[2.4, 0.9, 0.14]} pos={[-2.4, 0.59, -0.4]} cor={parede} />
+
+      {/* sala: rack com a TV, sofá de frente para ela e mesa de centro com o notebook */}
+      <Caixa tam={[1.1, 0.3, 0.32]} pos={[1.6, 0.29, -2.78]} cor="#8a5a3b" />
+      <Caixa tam={[0.3, 0.03, 0.12]} pos={[1.6, 0.455, -2.8]} cor="#23272e" />
+      <Caixa tam={[0.86, 0.5, 0.04]} pos={[1.6, 0.72, -2.8]} cor="#23272e" />
+      <Caixa tam={[0.8, 0.44, 0.01]} pos={[1.6, 0.72, -2.775]} cor="#5fb2f5" emissivo="#5fb2f5" intensidade={0.5} sombra={false} />
+      <Caixa tam={[2.2, 0.01, 1.7]} pos={[1.6, 0.145, -1.2]} cor="#c9bfa8" sombra={false} />
+      <Caixa tam={[0.7, 0.28, 0.4]} pos={[1.6, 0.28, -1.5]} cor={madeira} />
+      <Notebook pos={[1.6, 0.42, -1.5]} escala={0.25} />
+      <Caixa tam={[1.4, 0.26, 0.6]} pos={[1.6, 0.27, -0.4]} cor="#d9774e" />
+      <Caixa tam={[1.4, 0.54, 0.16]} pos={[1.6, 0.41, -0.08]} cor="#c7653e" />
+      {[-0.77, 0.77].map((x) => (
+        <Caixa key={x} tam={[0.14, 0.4, 0.6]} pos={[1.6 + x, 0.34, -0.4]} cor="#c7653e" />
+      ))}
+      {/* roteador numa mesinha no canto da sala */}
+      <Caixa tam={[0.35, 0.34, 0.35]} pos={[3.25, 0.31, -2.7]} cor={madeira} />
+      <PontoDeAcesso pos={[3.25, 0.48, -2.7]} escala={0.3} />
+
+      {/* cozinha: bancada na parede e mesa de jantar com cadeiras */}
+      <Caixa tam={[0.42, 0.6, 1.8]} pos={[3.32, 0.44, 1.2]} cor="#e3e8ee" />
+      <Caixa tam={[0.46, 0.04, 1.84]} pos={[3.3, 0.76, 1.2]} cor="#8e99a6" />
+      <Caixa tam={[0.9, 0.05, 0.6]} pos={[1.6, 0.64, 1.3]} cor={madeira} />
+      {[[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]].map(([x, z], k) => (
+        <Caixa key={k} tam={[0.05, 0.48, 0.05]} pos={[1.6 + x, 0.38, 1.3 + z]} cor="#8a5a3b" />
+      ))}
+      {[[-0.3, -0.5], [0.3, -0.5], [-0.3, 0.5], [0.3, 0.5]].map(([x, z], k) => (
+        <Caixa key={k} tam={[0.3, 0.3, 0.3]} pos={[1.6 + x, 0.29, 1.3 + z]} cor="#d9cfbb" />
+      ))}
+
+      {/* quarto: cama de casal com a cabeceira na parede, criado-mudo e guarda-roupa */}
+      <Caixa tam={[1.4, 0.3, 1.07]} pos={[-2.85, 0.29, 1.3]} cor="#f0f0f0" />
+      <Caixa tam={[0.95, 0.05, 1.09]} pos={[-2.62, 0.465, 1.3]} cor="#6d9bd1" />
+      <Caixa tam={[0.22, 0.07, 0.7]} pos={[-3.38, 0.475, 1.3]} cor="#ffffff" />
+      <Caixa tam={[0.3, 0.3, 0.3]} pos={[-3.35, 0.29, 0.5]} cor={madeira} />
+      <Caixa tam={[1.2, 0.8, 0.36]} pos={[-2.2, 0.54, -0.15]} cor="#d8c3a5" />
+
+      {/* Wi-Fi: o roteador fala com o computador, a TV e o notebook pelo ar */}
+      <Ondas pos={ROTEADOR_CASA} cor="#4aa8ff" raio={2} periodo={2} />
+      {SEM_FIO_CASA.map(([para, altura, duracao], i) => (
+        <LinkSemFio key={i} de={ROTEADOR_CASA} para={para} altura={altura} duracao={duracao} atraso={i * 0.9} />
+      ))}
+
       {/* jardim */}
-      <Faixa de={[1.4, 3.3]} para={[2.2, 7.2]} largura={0.9} cor="#d9cfbb" />
+      <Faixa de={[1.1, 2.5]} para={[2.2, 7.2]} largura={0.8} cor="#d9cfbb" />
       <Arvore pos={[-6, 0, -3.6]} />
       <Arvore pos={[6.6, 0, 2.6]} escala={1.1} />
       <Arvore pos={[-5.6, 0, 4.2]} escala={0.9} />
@@ -163,7 +236,25 @@ function Casa() {
 // ---------- 100 metros · Edifício ----------
 
 const MESAS: V3[] = [[-2.1, 0, -1.1], [-0.6, 0, -1.1], [0.9, 0, -1.1], [-0.6, 0, 0.9], [0.9, 0, 0.9]]
-const SWITCH_ESCRITORIO: V3 = [2.4, 0, 0.9]
+/** O switch fica no corredor entre as fileiras, com as portas viradas para as mesas (−x). */
+const SWITCH_ESCRITORIO: V3 = [2.4, 0, -0.1]
+/** Porta do switch de cada mesa (deslocamento em z): a ordem evita cruzamentos (as de trás por cima, as da frente por baixo). */
+const PORTA_MESA = [0, -0.144, -0.288, 0.144, 0.288]
+/**
+ * Cabo de cada mesa no chão: sai de baixo da mesa, vai reto até a sua faixa do corredor e segue
+ * paralelo aos outros até a porta do switch (cantos arredondados, sem cruzar nenhum outro).
+ */
+const CABOS_ESCRITORIO: V3[][] = MESAS.map(([x, , z], i) => {
+  const frente = z > 0
+  const xs = frente ? x - 0.2 : x + 0.2
+  const zPorta = SWITCH_ESCRITORIO[2] + PORTA_MESA[i]
+  const pontos: V3[] = [
+    [xs, 0.04, frente ? z - 0.25 : z + 0.25],
+    [xs, 0.04, zPorta],
+    [SWITCH_ESCRITORIO[0] - 0.16, 0.04, zPorta],
+  ]
+  return cantosSuaves(pontos, 0.14).map(([px, py, pz]) => [px - x, py, pz - z] as V3)
+})
 
 function Edificio({ semFio }: NivelProps) {
   const wlan = semFio === 'wlan'
@@ -190,10 +281,10 @@ function Edificio({ semFio }: NivelProps) {
             <group key={i} position={m}>
               <Caixa tam={[1.1, 0.4, 0.6]} pos={[0, 0.2, 0]} cor="#c9a27a" />
               {i < 3 ? <Computador pos={[0, 0.4, -0.05]} escala={0.42} /> : <Notebook pos={[0, 0.4, 0]} escala={0.5} />}
-              <Ligacao pontos={[[0.2, 0.03, 0.35], [SWITCH_ESCRITORIO[0] - m[0], 0.03, SWITCH_ESCRITORIO[2] - m[2] - 0.3]]} raio={0.03} viagens={i % 2 ? [{ duracao: 1.6, pausa: 1.4, atraso: i * 0.3 }] : []} />
+              <Ligacao pontos={CABOS_ESCRITORIO[i]} raio={0.03} surgir={0.1} viagens={i % 2 ? [{ duracao: 1.6, pausa: 1.4, atraso: i * 0.3 }] : []} />
             </group>
           ))}
-          <Switch pos={SWITCH_ESCRITORIO} escala={0.6} />
+          <Switch pos={SWITCH_ESCRITORIO} rot={[0, -Math.PI / 2, 0]} escala={0.6} />
           <Servidor pos={[2.4, 0, -1.3]} escala={0.6} />
           <Impressora pos={[-2.3, 0, 1.2]} escala={0.6} />
           <PontoDeAcesso pos={[0.2, 0.9, -2.1]} escala={0.8} />
@@ -417,7 +508,7 @@ function Orbita({ inclinacao, giro, atraso }: { inclinacao: number; giro: number
         <meshStandardMaterial color="#e98a2e" emissive="#e98a2e" emissiveIntensity={0.3} />
       </mesh>
       <Viajante curva={curva} duracao={7} pausa={0} atraso={atraso}>
-        <Envelope escala={0.8} cor="#e98a2e" />
+        <Dado cor="#e98a2e" sombra={false} altura={0} inicio={Math.round(atraso * 3)} />
       </Viajante>
     </>
   )
@@ -441,7 +532,7 @@ function Planeta() {
 
 export const NIVEIS: Nivel[] = [
   { medida: '1 metro', lugar: 'Mesa', classe: 'Redes Pessoais', cor: '#e6e8f5', Conteudo: Mesa },
-  { medida: '70 metros', lugar: 'Casa', classe: 'Redes Pessoais', cor: '#e6e8f5', encaixe: [-2.4, 0.15, -1.9], Conteudo: Casa },
+  { medida: '70 metros', lugar: 'Casa', classe: 'Redes Pessoais', cor: '#e6e8f5', encaixe: ENCAIXE_MESA, reducao: REDUCAO_CASA, Conteudo: Casa },
   { medida: '100 metros', lugar: 'Edifício', classe: 'Redes Locais', cor: '#f5dfe1', encaixe: [-4.8, 0.03, 3.4], Conteudo: Edificio },
   { medida: '1 Km', lugar: 'Campus', classe: 'Redes Locais', cor: '#f5dfe1', encaixe: [0, 0.03, 0], Conteudo: Campus },
   { medida: '10 Km', lugar: 'Cidade', classe: 'Redes Metropolitanas', cor: '#dedede', encaixe: [-2.55, 0.03, 2.55], Conteudo: Cidade },
@@ -458,7 +549,7 @@ const ORIGEM: Vector3[] = []
 ESCALA[TOPO] = 1
 ORIGEM[TOPO] = new Vector3()
 for (let k = TOPO; k > 0; k--) {
-  ESCALA[k - 1] = ESCALA[k] / R
+  ESCALA[k - 1] = ESCALA[k] / (NIVEIS[k].reducao ?? R)
   ORIGEM[k - 1] = ORIGEM[k].clone().addScaledVector(new Vector3(...NIVEIS[k].encaixe!), ESCALA[k])
 }
 
@@ -470,7 +561,7 @@ function Andar({ k, refs, semFio }: { k: number; refs: RefObject<(Group | null)[
         <Conteudo semFio={semFio} />
       </group>
       {k > 0 && (
-        <group position={NIVEIS[k].encaixe} scale={1 / R}>
+        <group position={NIVEIS[k].encaixe} scale={1 / (NIVEIS[k].reducao ?? R)}>
           <Andar k={k - 1} refs={refs} semFio={semFio} />
         </group>
       )}
@@ -493,7 +584,7 @@ function Zoom({ alvo, semFio, onChegou }: { alvo: number; semFio?: string; onChe
   function aplicar() {
     const tt = t.current
     const k = Math.min(Math.floor(tt), TOPO - 1)
-    const s = ESCALA[k] * R ** (tt - k)
+    const s = ESCALA[k] * (ESCALA[k + 1] / ESCALA[k]) ** (tt - k)
     const f = (s - ESCALA[k]) / (ESCALA[k + 1] - ESCALA[k])
     tmp.lerpVectors(ORIGEM[k], ORIGEM[k + 1], f)
     raiz.current?.scale.setScalar(1 / s)

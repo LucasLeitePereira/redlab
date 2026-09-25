@@ -1,7 +1,8 @@
 import { Alvo, Arvore, Cilindro, Esfera, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
 import { Ligacao, type Viagem } from '../../../three/Ligacao'
-import { Caminhao, Computador, Envelope, Switch } from '../../../three/modelos'
-import { Percurso, useCurva, Viajante } from '../../../three/movimento'
+import { Computador, Switch } from '../../../three/modelos'
+import { Dado } from '../../../three/dados'
+import { linhaDoTempo, Percurso, useCurva, Viajante } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
 
 // Fase 2.5 — topologias físicas (Aula 02, p. 13–15). Nos passos de explorar, os alvos
@@ -63,6 +64,10 @@ function Barra(cena: CenaProps) {
     [XS_BARRA[para], Y + 0.02, Z_BARRA],
     [XS_BARRA[para], Y + 0.02, 0.1],
   ]
+  // um dado por vez no cabo: a resposta só sai depois que o pedido chega
+  const tPedido = linhaDoTempo(rota(0, 4), 3.2, 0).total
+  const tResposta = linhaDoTempo(rota(4, 1), 3.2, 0).total
+  const periodo = tPedido + tResposta + 0.6
   return (
     <>
       <Enlace de={[-6.3, Y, Z_BARRA]} para={[6.3, Y, Z_BARRA]} raio={0.1} cortado={cabo} corte={5.1 / 12.6} />
@@ -77,11 +82,11 @@ function Barra(cena: CenaProps) {
       ))}
       {!caiuTudo && (
         <>
-          <Percurso pontos={rota(0, 4)} velocidade={3.2} periodo={5.5}>
-            <group scale={0.7}><Caminhao cor={PEDIDO} /></group>
+          <Percurso pontos={rota(0, 4)} velocidade={3.2} periodo={periodo}>
+            <group scale={0.7}><Dado cor={PEDIDO} /></group>
           </Percurso>
-          <Percurso pontos={rota(4, 1)} velocidade={3.2} periodo={5.5} atraso={2.4}>
-            <group scale={0.7}><Caminhao cor={RESPOSTA} /></group>
+          <Percurso pontos={rota(4, 1)} velocidade={3.2} periodo={periodo} atraso={tPedido + 0.3}>
+            <group scale={0.7}><Dado cor={RESPOSTA} /></group>
           </Percurso>
         </>
       )}
@@ -168,7 +173,7 @@ function Anel() {
         <Rotulo pos={[0, 0.95, 0]}>token</Rotulo>
       </Viajante>
       <Viajante curva={meiaVolta} duracao={4} pausa={1.5} atraso={0.5}>
-        <Envelope pos={[0, 0.35, 0]} escala={0.9} />
+        <Dado cor="#ef6f6c" />
       </Viajante>
       <Rotulo pos={[0, 0.9, 0]} escuro>sentido único ↻</Rotulo>
     </>
@@ -202,7 +207,7 @@ function Malha(cena: CenaProps) {
         )
       })}
       <Percurso key={cortado ? 'desvio' : 'direto'} pontos={rota} velocidade={2.6} espera={0.3}>
-        <group scale={0.75}><Caminhao cor={PEDIDO} /></group>
+        <group scale={0.75}><Dado cor={PEDIDO} /></group>
       </Percurso>
       <Alvo id="enlace" pos={[(noCabo(0)[0] + noCabo(1)[0]) / 2, 0.8, (noCabo(0)[2] + noCabo(1)[2]) / 2]} cena={cena} simbolo="✂" />
       {cortado && <Rotulo pos={[noCabo(3)[0], 1.5, noCabo(3)[2] - 0.8]} escuro>Desvio: redundância</Rotulo>}

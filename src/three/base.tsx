@@ -15,7 +15,7 @@ import {
 import { Medidor } from '../dev/Medidor'
 import { RESOLUCOES, useConfig } from '../engine/config'
 import type { CenaProps } from '../engine/tipos'
-import { ArvoreKenney, precarregarKenney } from './kenney'
+import { ArvoreKenney } from './kenney'
 import {
   caixaUnitaria,
   discoSombra,
@@ -141,29 +141,6 @@ function SeletorResolucao() {
   )
 }
 
-/** TESTE: troca Computador, Notebook e Árvore pelos modelos do Kenney. */
-function SeletorModelos() {
-  const modelos = useConfig((s) => s.modelos)
-  const setModelos = useConfig((s) => s.setModelos)
-  useEffect(() => {
-    if (modelos === 'kenney') precarregarKenney()
-  }, [modelos])
-  const opcoes = [
-    ['proprios', 'Próprios'],
-    ['kenney', 'Kenney'],
-  ] as const
-  return (
-    <div className="seletor-resolucao seletor-modelos" role="radiogroup" aria-label="Modelos 3D">
-      <span>Modelos</span>
-      {opcoes.map(([valor, nome]) => (
-        <button key={valor} role="radio" aria-checked={valor === modelos} className={valor === modelos ? 'ativo' : ''} onClick={() => setModelos(valor)}>
-          {nome}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 /**
  * O painel lateral cobre a direita da tela (ou a parte de baixo no celular):
  * desloca o centro da projeção para a cena ficar centralizada na área livre.
@@ -243,7 +220,6 @@ export function Palco({
         <div ref={camada} className="camada-rotulos" />
       </Camada.Provider>
       <SeletorResolucao />
-      <SeletorModelos />
     </div>
   )
 }
@@ -260,11 +236,9 @@ export function Ilha({ raio = 9, cor = '#a9d18e' }: { raio?: number; cor?: strin
 }
 
 export function Arvore({ pos, escala = 1 }: { pos: V3; escala?: number }) {
-  const kenney = useConfig((s) => s.modelos) === 'kenney'
-  const propria = <ArvorePropria />
   return (
     <group position={pos} scale={escala}>
-      {kenney ? <Suspense fallback={propria}><ArvoreKenney pos={pos} /></Suspense> : propria}
+      <Suspense fallback={<ArvorePropria />}><ArvoreKenney pos={pos} /></Suspense>
     </group>
   )
 }

@@ -82,7 +82,6 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 }
 .seletor-resolucao button:hover { background: var(--papel-2); }
 .seletor-resolucao button.ativo { background: var(--azul); color: #fff; }
-.seletor-modelos { bottom: 58px; }
 .camada-rotulos { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 /* ---------- HUD superior ---------- */
@@ -623,7 +622,6 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
   .dica-camera { display: none; }
   .seletor-resolucao { right: 10px; bottom: auto; top: 10px; }
   .seletor-resolucao span { display: none; }
-  .seletor-modelos { top: 54px; }
   .nota-slide .colunas { grid-template-columns: 1fr; }
 }
 
@@ -677,3 +675,9 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
   .escala-tabela button { grid-template-columns: 56px 1fr; font-size: 10.5px; padding: 2px 6px; }
   .escala-tabela .classe { display: none; }
 }
+
+/* Sobre (hub inicial) */
+.sobre-lista { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; margin: 16px 0 0; padding: 14px 16px; border-radius: 14px; background: var(--papel-2); box-shadow: inset 0 0 0 1.5px var(--borda); }
+.sobre-lista dt { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tinta-2, #6b7688); align-self: center; }
+.sobre-lista dd { margin: 0; font-weight: 800; color: var(--tinta); }
+.sobre-lista dd small { display: block; font-weight: 600; font-size: 12px; color: var(--tinta-2, #6b7688); }

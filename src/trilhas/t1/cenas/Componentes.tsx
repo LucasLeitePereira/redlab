@@ -1,9 +1,10 @@
 import { Line } from '@react-three/drei'
 import { Alvo, Arvore, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
 import { Ligacao } from '../../../three/Ligacao'
-import { Computador, Envelope, LivroDeRegras, PlacaDeRede } from '../../../three/modelos'
-import { arco } from '../../../three/movimento'
+import { Computador, LivroDeRegras, PlacaDeRede } from '../../../three/modelos'
+import { arco, cantosSuaves } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
+import { Dado } from '../../../three/dados'
 
 // Fase 1.1 — os 6 componentes básicos, montados como no desenho do slide (Aula 01, p. 3–4):
 // dois computadores, placas de rede, o cabo entre eles, a mensagem indo e voltando,
@@ -11,7 +12,7 @@ import type { CenaProps } from '../../../engine/tipos'
 
 const A: V3 = [-3.6, 0.12, 0]
 const B: V3 = [3.0, 0.12, 0]
-const CABO: V3[] = [[-2.45, 0.14, 0.35], [-1.4, 0.14, 1.6], [0.7, 0.14, 2.0], [2.9, 0.14, 1.5], [3.95, 0.14, 0.35]]
+const CABO: V3[] = cantosSuaves([[-2.65, 0.14, 0.35], [-2.65, 0.14, 1.45], [3.95, 0.14, 1.45], [3.95, 0.14, 0.35]], 0.45)
 
 const ROTULOS: Record<string, { pos: V3; texto: string }> = {
   computador: { pos: [-3.6, 2.05, 0.1], texto: 'Computador' },
@@ -34,19 +35,23 @@ export function CenaComponentes(cena: CenaProps) {
       <Computador pos={A} />
       <Computador pos={B} tela="#8fd9a8" />
       <PlacaDeRede pos={[-2.2, 0.12, 0.9]} rot={[0, -0.5, 0]} escala={0.6} />
-      <PlacaDeRede pos={[3.7, 0.12, 1.0]} rot={[0, 0.5, 0]} escala={0.6} />
+      <PlacaDeRede pos={[3.45, 0.12, 1.05]} rot={[0, 0.5, 0]} escala={0.6} />
 
       <Ligacao
         pontos={CABO}
         cor="#2f5fb0"
         raio={0.07}
+        surgir={0.1}
         viagens={[
           { cor: '#ef6f6c', duracao: 3.4 },
           { cor: '#3aa0e6', duracao: 3.4, atraso: 1.9, inverso: true },
         ]}
       />
 
-      <Envelope pos={[-0.6, 1.6, 1.2]} escala={1.4} />
+      {/* a mensagem, entre os dois computadores */}
+      <group position={[-0.6, 1.6, 1.2]} scale={1.6}>
+        <Dado tipo="mensagem" sombra={false} altura={0} />
+      </group>
 
       <LivroDeRegras pos={[-3.6, 2.6, 0]} />
       <LivroDeRegras pos={[3.0, 2.6, 0]} />

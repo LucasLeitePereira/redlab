@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { CatmullRomCurve3, DoubleSide, MeshBasicMaterial, Vector3, type Group, type Mesh } from 'three'
+import { CatmullRomCurve3, DoubleSide, Matrix4, MeshBasicMaterial, Vector3, type Group, type Mesh, type Object3D } from 'three'
 import type { V3 } from './base'
 import { anelOnda, esferaUnitaria, material } from './recursos'
 
@@ -19,6 +19,40 @@ export function arco(de: V3, para: V3, altura: number, segmentos = 8): V3[] {
       de[2] + (para[2] - de[2]) * t,
     ]
   })
+}
+
+/**
+ * Cabo de `de` a `para` com uma curva lateral sutil: o meio se afasta `desvio` da reta
+ * (positivo = para +z quando o cabo vai da esquerda para a direita).
+ */
+export function curvaSuave(de: V3, para: V3, desvio = 0.2, segmentos = 10): V3[] {
+  const dx = para[0] - de[0]
+  const dz = para[2] - de[2]
+  const d = Math.hypot(dx, dz) || 1
+  return Array.from({ length: segmentos + 1 }, (_, i) => {
+    const t = i / segmentos
+    const o = Math.sin(Math.PI * t) * desvio
+    return [de[0] + dx * t - (dz / d) * o, de[1] + (para[1] - de[1]) * t, de[2] + dz * t + (dx / d) * o]
+  })
+}
+
+/** Caminho em linhas retas pelos `pontos`, com os cantos arredondados (para contornar objetos). */
+export function cantosSuaves(pontos: V3[], raio = 0.4, passos = 6): V3[] {
+  const saida: V3[] = [pontos[0]]
+  for (let i = 1; i < pontos.length - 1; i++) {
+    const [p, c, q] = [pontos[i - 1], pontos[i], pontos[i + 1]]
+    const dIn = Math.hypot(c[0] - p[0], c[1] - p[1], c[2] - p[2])
+    const dOut = Math.hypot(q[0] - c[0], q[1] - c[1], q[2] - c[2])
+    const r = Math.min(raio, dIn / 2, dOut / 2)
+    const a = c.map((v, k) => v - ((c[k] - p[k]) / dIn) * r) as V3
+    const b = c.map((v, k) => v + ((q[k] - c[k]) / dOut) * r) as V3
+    for (let j = 0; j <= passos; j++) {
+      const t = j / passos
+      saida.push(a.map((v, k) => (1 - t) ** 2 * v + 2 * (1 - t) * t * c[k] + t ** 2 * b[k]) as V3)
+    }
+  }
+  saida.push(pontos[pontos.length - 1])
+  return saida
 }
 
 export function Cabo({
@@ -46,6 +80,20 @@ export function Cabo({
 }
 
 const tmp = new Vector3()
+const direita = new Vector3()
+const ORIGEM = new Vector3()
+const CIMA = new Vector3(0, 1, 0)
+const giro = new Matrix4()
+
+/**
+ * Vira a frente (+z) de `o` para a direção `d`, no referencial do pai. (O `lookAt` do three.js
+ * recebe um ponto em coordenadas do mundo: dentro de um grupo escalado ou deslocado, como no zoom
+ * da Abrangência, ele apontaria para o lugar errado e o objeto tombaria.)
+ */
+function apontar(o: Object3D, d: Vector3) {
+  if (d.lengthSq() < 1e-8) return
+  o.quaternion.setFromRotationMatrix(giro.lookAt(d, ORIGEM, CIMA))
+}
 
 /** Leva `children` ao longo da curva; a frente (+z) aponta para onde está indo. */
 export function Viajante({
@@ -56,6 +104,9 @@ export function Viajante({
   altura = 0,
   inverso = false,
   ativo = true,
+  surgir,
+  lado = 0,
+  inclinar = false,
   children,
 }: {
   curva: CatmullRomCurve3
@@ -65,6 +116,12 @@ export function Viajante({
   altura?: number
   inverso?: boolean
   ativo?: boolean
+  /** Fração do percurso em que cresce na saída (e encolhe na chegada). */
+  surgir?: number
+  /** Desvio lateral para a direita de quem anda (mão da pista). */
+  lado?: number
+  /** Inclina a frente na subida e na descida (senão fica sempre na horizontal). */
+  inclinar?: boolean
   children: ReactNode
 }) {
   const ref = useRef<Group>(null)
@@ -87,13 +144,15 @@ export function Viajante({
       return
     }
     g.visible = true
+    if (surgir) g.scale.setScalar(Math.max(0.01, Math.min(1, u / surgir, (1 - u) / surgir)))
     const s = inverso ? 1 - u : u
     curva.getPointAt(s, g.position)
     g.position.y += altura
     curva.getTangentAt(s, tmp)
     if (inverso) tmp.negate()
-    tmp.y = 0
-    if (tmp.lengthSq() > 1e-6) g.lookAt(g.position.x + tmp.x, g.position.y, g.position.z + tmp.z)
+    if (lado) g.position.add(direita.set(-tmp.z, 0, tmp.x).normalize().multiplyScalar(lado))
+    if (!inclinar) tmp.y = 0
+    apontar(g, tmp)
   })
 
   return (
@@ -130,7 +189,7 @@ export function Pulsos({
       const u = (clock.elapsedTime / duracao + i / quantidade) % 1
       curva.getPointAt(u, m.position)
       curva.getTangentAt(u, tmp)
-      m.lookAt(m.position.x + tmp.x, m.position.y + tmp.y, m.position.z + tmp.z)
+      apontar(m, tmp)
     })
   })
   return (
@@ -259,7 +318,7 @@ export function Percurso({
     const [a, b] = [pontos[i - 1], pontos[i]]
     const s = u <= saida ? 0 : Math.min(1, (u - saida) / (chegadas[i] - saida))
     g.position.set(a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s, a[2] + (b[2] - a[2]) * s)
-    g.lookAt(g.position.x + b[0] - a[0], g.position.y, g.position.z + b[2] - a[2])
+    apontar(g, tmp.set(b[0] - a[0], 0, b[2] - a[2]))
   })
 
   return (

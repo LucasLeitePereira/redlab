@@ -277,7 +277,7 @@ const fase33: Fase = {
 > - Cada sub-rede possui uma identificação.
 > - Apenas *hosts* na mesma sub-rede se comunicam diretamente.
 
-A figura do slide: três notebooks **no mesmo cabo**. Os dois 192.168.10.x estão na **sub-rede A** e conversam (caminhão verde). O 172.16.10.1 está na **sub-rede B** e fica de cara feia: mesmo ligado no mesmo cabo, não conversa direto com A (caminhão vermelho).
+A figura do slide: três notebooks **no mesmo cabo**. Os dois 192.168.10.x estão na **sub-rede A** e conversam (dado verde). O 172.16.10.1 está na **sub-rede B** e fica de cara feia: mesmo ligado no mesmo cabo, não conversa direto com A (dado vermelho).
 
 > Como sabemos diferenciar as sub-redes?`,
       fonte: p1(3),
@@ -407,7 +407,7 @@ Se só *hosts* da mesma sub-rede conversam direto, como A fala com B?
 
 > Configurado para fazer o encaminhamento dos pacotes entre diferentes sub-redes.
 
-Veja o caminhão: sai da sub-rede A, **passa pela gateway** e ela encaminha para a sub-rede B. Agora todo mundo sorri.`,
+Veja o dado: sai da sub-rede A, **passa pela gateway** e ela encaminha para a sub-rede B. Agora todo mundo sorri.`,
       fonte: p1(5),
       cena: { modo: 'gateway' },
     },

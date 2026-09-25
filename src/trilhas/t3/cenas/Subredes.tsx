@@ -1,6 +1,7 @@
 import { Arvore, Caixa, Ilha, Rotulo, type V3 } from '../../../three/base'
 import { Ligacao } from '../../../three/Ligacao'
-import { Caminhao, Notebook, Servidor } from '../../../three/modelos'
+import { Notebook, Servidor } from '../../../three/modelos'
+import { Dado } from '../../../three/dados'
 import { Janela, linhaDoTempo, Percurso } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
 import { CenaBits } from './Bits'
@@ -76,13 +77,13 @@ function MesmaSubrede() {
   return (
     <>
       <Percurso pontos={ok} velocidade={velocidade} periodo={periodo}>
-        <group scale={0.75}><Caminhao cor="#23915f" /></group>
+        <group scale={0.75}><Dado cor="#23915f" /></group>
       </Percurso>
       <Janela periodo={periodo} de={tOk} ate={tOk + 1.4}>
         <Rotulo pos={[-1, 1.9, 0.4]} escuro>✓ Mesma sub-rede: entregue</Rotulo>
       </Janela>
       <Percurso pontos={barrado} velocidade={velocidade} atraso={tOk + 1.4} periodo={periodo}>
-        <group scale={0.75}><Caminhao cor="#cf4b47" /></group>
+        <group scale={0.75}><Dado cor="#cf4b47" /></group>
       </Percurso>
       <Janela periodo={periodo} de={tOk + 1.4 + tBarrado} ate={periodo}>
         <Rotulo pos={[FRONTEIRA_X, 1.1, BARRA_Z]} escuro>⛔ Outra sub-rede: não vai direto</Rotulo>
@@ -109,7 +110,7 @@ function Gateway() {
       <Rotulo pos={[GATEWAY_X - 0.7, 1.2, -2.5]} classe="esq bits">192·168·10·3 / 255·255·255·0</Rotulo>
       <Rotulo pos={[GATEWAY_X + 0.7, 1.2, -2.5]} classe="dir bits">172·16·10·2 / 255·255·0·0</Rotulo>
       <Percurso pontos={caminho} velocidade={velocidade} espera={0.25} periodo={periodo}>
-        <group scale={0.75}><Caminhao cor="#e9a620" /></group>
+        <group scale={0.75}><Dado cor="#e9a620" /></group>
       </Percurso>
       <Janela periodo={periodo} de={chegadas[3] - 0.2} ate={chegadas[3] + 1.4}>
         <Rotulo pos={[GATEWAY_X, 2.9, -3.1]}>Encaminha: A → B</Rotulo>

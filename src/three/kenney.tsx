@@ -4,8 +4,9 @@ import { LinearSRGBColorSpace, Mesh, type MeshStandardMaterial, type Object3D } 
 import { useAtualizarSombras, type V3 } from './base'
 import { material } from './recursos'
 
-// TESTE — modelos do Kenney (kenney.nl, licença CC0) no lugar do Computador, do Notebook
-// e da Árvore feitos à mão. Liga/desliga pelo seletor "Modelos" do palco (engine/config.ts).
+// Modelos do Kenney (kenney.nl, licença CC0) para o Computador, o Notebook e a Árvore.
+// Os feitos à mão (modelos.tsx / base.tsx) só aparecem enquanto os GLBs carregam.
+// O poste vem do City Kit (Roads) e usa a textura do kit (Textures/colormap.png).
 // Os GLBs ficam em public/modelos/kenney/. As cores do Kenney vêm "cruas" no arquivo
 // (valores sRGB gravados como lineares), por isso são relidas como sRGB aqui.
 
@@ -18,8 +19,8 @@ const ARVORES = [
   { nome: 'tree_cone', escala: 1.15 },
   { nome: 'tree_pineRoundA', escala: 1.2 },
 ]
-const TODOS = ['computerScreen', 'computerKeyboard', 'computerMouse', 'laptop', ...ARVORES.map((a) => a.nome)]
-export const precarregarKenney = () => TODOS.forEach((n) => useGLTF.preload(url(n)))
+const TODOS = ['computerScreen', 'computerKeyboard', 'computerMouse', 'laptop', 'light-square', ...ARVORES.map((a) => a.nome)]
+TODOS.forEach((n) => useGLTF.preload(url(n)))
 
 /**
  * Clona o modelo trocando os materiais pelos da casa (cache compartilhado).
@@ -75,4 +76,19 @@ export function ArvoreKenney({ pos }: { pos: V3 }) {
   const i = Math.abs(Math.round(pos[0] * 7 + pos[2] * 13)) % ARVORES.length
   const { nome, escala } = ARVORES[i]
   return <Peca nome={nome} pos={[0, 0, 0]} escala={escala} />
+}
+
+/** Poste de rua (City Kit Roads): o braço aponta para -z, com a textura original do kit. */
+export function PosteKenney({ escala = 1 }: { escala?: number }) {
+  const { scene } = useGLTF(url('light-square'))
+  const atualizarSombras = useAtualizarSombras()
+  const clone = useMemo(() => {
+    const c = scene.clone(true)
+    c.traverse((o: Object3D) => {
+      if (o instanceof Mesh) o.castShadow = o.receiveShadow = true
+    })
+    return c
+  }, [scene])
+  useEffect(() => atualizarSombras(), [clone, atualizarSombras])
+  return <primitive object={clone} scale={escala} />
 }

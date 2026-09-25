@@ -1,8 +1,10 @@
 import { Line } from '@react-three/drei'
 import { Arvore, Ilha, Lote, Rotulo, type V3 } from '../../../three/base'
-import { Computador, Envelope, LivroDeRegras, PlacaDeRede } from '../../../three/modelos'
-import { arco, Cabo, useCurva, Viajante } from '../../../three/movimento'
+import { Computador, LivroDeRegras, PlacaDeRede } from '../../../three/modelos'
+import { Ligacao } from '../../../three/Ligacao'
+import { arco, cantosSuaves, useCurva, Viajante } from '../../../three/movimento'
 import type { CenaProps } from '../../../engine/tipos'
+import { Dado } from '../../../three/dados'
 
 // Fase 1.3 — protocolos (Aula 01, p. 4). Dois "andares" de regras entre os computadores:
 // em cima, alto nível (entre aplicações); embaixo, baixo nível (entre dispositivos de rede).
@@ -11,17 +13,19 @@ import type { CenaProps } from '../../../engine/tipos'
 const A: V3 = [-3.6, 0.12, 0]
 const B: V3 = [3.6, 0.12, 0]
 
+/** Cabo: sai da frente de um gabinete, corre reto na frente das mesas e entra no outro (como na fase 1.1). */
+const CABO = cantosSuaves([[-2.65, 0.14, 0.35], [-2.65, 0.14, 1.5], [4.55, 0.14, 1.5], [4.55, 0.14, 0.35]], 0.45)
+
 const VIAGEM: V3[] = [
-  [-3.6, 1.25, 0.5], [-3.0, 0.7, 0.9], [-2.3, 0.35, 1.2],
-  [0, 0.3, 1.9],
-  [2.3, 0.35, 1.2], [3.0, 0.7, 0.9], [3.6, 1.25, 0.5],
+  [-3.6, 1.25, 0.5], [-3.0, 0.7, 0.9], [-2.3, 0.35, 1.4],
+  [0, 0.3, 1.5],
+  [2.3, 0.35, 1.4], [3.0, 0.7, 0.9], [3.6, 1.25, 0.5],
 ]
 
 export function CenaProtocolos(cena: CenaProps) {
   const foco = (cena.estado.foco as string | undefined) ?? 'ambos'
   const alto = foco === 'alto' || foco === 'ambos' || foco === 'regras'
   const baixo = foco === 'baixo' || foco === 'ambos' || foco === 'regras'
-  const cabo = useCurva([[-2.3, 0.14, 1.1], [0, 0.14, 1.9], [2.3, 0.14, 1.1]])
   const viagem = useCurva(VIAGEM)
 
   return (
@@ -33,7 +37,18 @@ export function CenaProtocolos(cena: CenaProps) {
       <Computador pos={B} tela="#8fd9a8" />
       <PlacaDeRede pos={[-2.3, 0.12, 1.1]} rot={[0, -0.6, 0]} escala={0.6} />
       <PlacaDeRede pos={[2.3, 0.12, 1.1]} rot={[0, 0.6, 0]} escala={0.6} />
-      <Cabo curva={cabo} cor="#2f5fb0" raio={0.07} />
+      {/* dados indo e voltando pelo cabo (param enquanto a mensagem faz a viagem completa) */}
+      <Ligacao
+        pontos={CABO}
+        cor="#2f5fb0"
+        raio={0.07}
+        surgir={0.1}
+        ativo={cena.estado.viagem !== true}
+        viagens={[
+          { cor: '#ef6f6c', duracao: 2.8, pausa: 1 },
+          { cor: '#3aa0e6', duracao: 2.8, pausa: 1, atraso: 1.9, inverso: true },
+        ]}
+      />
 
       {/* andar de cima: alto nível, entre as aplicações */}
       <LivroDeRegras pos={[-3.6, 2.5, 0]} cor="#e2703a" />
@@ -70,7 +85,7 @@ export function CenaProtocolos(cena: CenaProps) {
       </Rotulo>
 
       <Viajante curva={viagem} duracao={4.5} pausa={0.8} ativo={cena.estado.viagem === true}>
-        <Envelope escala={0.9} pos={[0, 0.1, 0]} />
+        <Dado tipo="mensagem" />
       </Viajante>
 
       {foco === 'sor' && (

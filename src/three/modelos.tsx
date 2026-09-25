@@ -2,7 +2,6 @@ import { useFrame } from '@react-three/fiber'
 import { Suspense, useRef } from 'react'
 import type { Group } from 'three'
 import { Caixa, Cilindro, Esfera, SombraFalsa, type V3 } from './base'
-import { useConfig } from '../engine/config'
 import { ComputadorKenney, NotebookKenney } from './kenney'
 import { material, toroEngrenagem } from './recursos'
 
@@ -12,7 +11,7 @@ const TELA_AZUL = '#5fb2f5'
 
 export function Computador({ pos, rot, escala = 1, tela = TELA_AZUL, apagado }: Posicionado & { tela?: string; apagado?: boolean }) {
   const cor = apagado ? '#b9c0c8' : '#e3e8ee'
-  const kenney = useConfig((s) => s.modelos) === 'kenney'
+  // monitor próprio: aparece só enquanto o modelo do Kenney carrega
   const monitor = (
     <>
       <Caixa tam={[0.5, 0.05, 0.35]} pos={[0, 0.025, 0]} cor="#8e99a6" />
@@ -24,8 +23,8 @@ export function Computador({ pos, rot, escala = 1, tela = TELA_AZUL, apagado }: 
   )
   return (
     <group position={pos} rotation={rot} scale={escala}>
-      {kenney ? <Suspense fallback={monitor}><ComputadorKenney tela={tela} apagado={apagado} /></Suspense> : monitor}
-      {/* o Kenney não tem gabinete: fica o próprio nos dois modos */}
+      <Suspense fallback={monitor}><ComputadorKenney tela={tela} apagado={apagado} /></Suspense>
+      {/* o Kenney não tem gabinete: fica o próprio */}
       <Caixa tam={[0.42, 0.9, 0.85]} pos={[0.95, 0.45, -0.1]} cor={cor} />
       <Esfera raio={0.035} pos={[0.95, 0.75, 0.33]} cor="#39d97a" emissivo="#39d97a" intensidade={1.2} sombra={false} />
     </group>
@@ -33,11 +32,9 @@ export function Computador({ pos, rot, escala = 1, tela = TELA_AZUL, apagado }: 
 }
 
 export function Notebook({ pos, rot, escala = 1, tela = TELA_AZUL }: Posicionado & { tela?: string }) {
-  const kenney = useConfig((s) => s.modelos) === 'kenney'
-  const proprio = <NotebookProprio tela={tela} />
   return (
     <group position={pos} rotation={rot} scale={escala}>
-      {kenney ? <Suspense fallback={proprio}><NotebookKenney tela={tela} /></Suspense> : proprio}
+      <Suspense fallback={<NotebookProprio tela={tela} />}><NotebookKenney tela={tela} /></Suspense>
     </group>
   )
 }

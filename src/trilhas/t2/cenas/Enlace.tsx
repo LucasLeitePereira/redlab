@@ -12,7 +12,17 @@ const A: V3 = [-4.8, 0.12, -0.6]
 const B: V3 = [4.8, 0.12, -0.6]
 const IDA = '#ef6f6c'
 const VOLTA = '#3aa0e6'
-const PERIODO_HALF = 8
+
+// Half-duplex: A manda dois dados, um de cada vez; quando o último chega, é a vez de B.
+// O semáforo de cada um fica verde do primeiro envio até o último dado chegar do outro lado.
+const TRECHO_HALF = 2.2
+const FOLGA_HALF = 0.3
+const TROCA_HALF = 0.5
+const IDA_HALF = [0, TRECHO_HALF + FOLGA_HALF]
+const FIM_A = IDA_HALF[1] + TRECHO_HALF
+const VOLTA_HALF = [FIM_A + TROCA_HALF, FIM_A + TROCA_HALF + TRECHO_HALF + FOLGA_HALF]
+const FIM_B = VOLTA_HALF[1] + TRECHO_HALF
+const PERIODO_HALF = FIM_B + TROCA_HALF
 
 /** Rua reta entre os dois computadores, na profundidade `z`. */
 function Rua({ z, viagens }: { z: number; viagens: Viagem[] }) {
@@ -70,14 +80,12 @@ export function CenaEnlace({ estado }: CenaProps) {
           <Rua
             z={0.4}
             viagens={[
-              { cor: IDA, duracao: 2.6, pausa: PERIODO_HALF - 2.6, atraso: 0 },
-              { cor: IDA, duracao: 2.6, pausa: PERIODO_HALF - 2.6, atraso: 1.1 },
-              { cor: VOLTA, duracao: 2.6, pausa: PERIODO_HALF - 2.6, atraso: 4, inverso: true },
-              { cor: VOLTA, duracao: 2.6, pausa: PERIODO_HALF - 2.6, atraso: 5.1, inverso: true },
+              ...IDA_HALF.map((atraso) => ({ cor: IDA, duracao: TRECHO_HALF, pausa: PERIODO_HALF - TRECHO_HALF, atraso })),
+              ...VOLTA_HALF.map((atraso) => ({ cor: VOLTA, duracao: TRECHO_HALF, pausa: PERIODO_HALF - TRECHO_HALF, atraso, inverso: true })),
             ]}
           />
-          <Semaforo pos={A} de={0} ate={3.7} />
-          <Semaforo pos={B} de={4} ate={7.7} />
+          <Semaforo pos={A} de={0} ate={FIM_A} />
+          <Semaforo pos={B} de={VOLTA_HALF[0]} ate={FIM_B} />
           <Rotulo pos={[0, 1.3, 0.4]} escuro>Uma faixa: um sentido de cada vez</Rotulo>
         </group>
       )}

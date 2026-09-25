@@ -123,7 +123,7 @@ No mapa, as linhas vermelhas são as linhas de transmissão e os cilindros com a
       texto: `
 Última linha da tabela: **10.000 Km → Planeta → Internet**.
 
-A cidade, o país e o continente viraram pontinhos. No planeta inteiro, as redes estão **interligadas**, e os envelopes dão a volta ao mundo, como no globo do slide.
+A cidade, o país e o continente viraram pontinhos. No planeta inteiro, as redes estão **interligadas**, e os dados dão a volta ao mundo, como no globo do slide.
 
 O que é a Internet (e por que ela **não** é a mesma coisa que a WEB) é a próxima fase.`,
       fonte: f(2),
@@ -263,7 +263,7 @@ const fase22: Fase = {
       texto: `
 > **INTERNET** → “Conjunto de redes interligadas espalhadas pelo mundo. Todos os serviços disponíveis seguem o mesmo padrão e utilizam o conjunto de protocolos (TCP/IP).”
 
-Na cena, cada bairro é **uma rede**, com seu roteador. Os cabos entre os roteadores juntam essas redes numa só: isso é a Internet. Todos os caminhões seguem as mesmas regras (**TCP/IP**), por isso qualquer rede entende qualquer outra.`,
+Na cena, cada bairro é **uma rede**, com seu roteador. Os cabos entre os roteadores juntam essas redes numa só: isso é a Internet. Todos os dados seguem as mesmas regras (**TCP/IP**), por isso qualquer rede entende qualquer outra.`,
       fonte: f(6),
       cena: { foco: 'internet' },
       notas: [
@@ -279,7 +279,7 @@ Na cena, cada bairro é **uma rede**, com seu roteador. Os cabos entre os rotead
       texto: `
 > **WEB** → “Conjunto de aplicações disponíveis aos usuários.”
 
-Agora apareceram as **aplicações** em cima de cada rede. Um jeito de lembrar: a **Internet** são as ruas e os caminhões; a **WEB** são os serviços que você usa por essas ruas.`,
+Agora apareceram as **aplicações** em cima de cada rede. Um jeito de lembrar: a **Internet** são os cabos e os dados que passam por eles; a **WEB** são os serviços que você usa por essas ruas.`,
       fonte: f(6),
       cena: { foco: 'web' },
       notas: [
@@ -397,7 +397,7 @@ const fase23: Fase = {
 - Consistem em conexões entre **pares individuais**.
 - Para ir da origem ao destino, **nós intermediários** precisam ser usados.
 
-Veja: A não tem cabo até C. O caminhão para em **B**, que repassa para C.`,
+Veja: A não tem cabo até C. O dado para em **B**, que repassa para C.`,
       fonte: f(7),
       cena: { modo: 'ponto' },
       notas: [
@@ -415,7 +415,7 @@ Veja: A não tem cabo até C. O caminhão para em **B**, que repassa para C.`,
 
 - O sinal enviado é **recebido por todos** os outros computadores conectados ao mesmo meio de transmissão.
 
-A resposta sai de A, corre pelo cabo para os dois lados e acende a tela de todo mundo. O slide resume a comparação assim:
+A resposta sai de A, corre pelo cabo para os dois lados e chega na tela de todo mundo (o ícone com ✓). O slide resume a comparação assim:
 
 - **Ponto-a-ponto** → **um** receptor do sinal;
 - **Difusão** → **vários** receptores do sinal.`,
@@ -429,7 +429,7 @@ A resposta sai de A, corre pelo cabo para os dois lados e acende a tela de todo 
 
 > ❶ **UNICAST** → A informação é endereçada apenas para **um único destinatário**.
 
-Só a tela de **D** acende.`,
+Só **D** recebe (o ícone com ✓ aparece na tela dele).`,
       fonte: f(9),
       cena: { modo: 'unicast' },
     },
@@ -539,7 +539,7 @@ const fase24: Fase = {
 
 **Exemplos:** teclados, monitores e o fio de fibra ótica.
 
-Na cena, todos os caminhões vão de A para B. B nunca responde.`,
+Na cena, todos os dados vão de A para B. B nunca responde.`,
       fonte: f(11),
       cena: { modo: 'simplex' },
     },
@@ -716,7 +716,7 @@ Nos próximos passos você vai **cortar cabos** com a tesoura ✂ para ver o que
 - O gerenciamento é feito através de uma **mensagem (*token*)** que é enviada **nó a nó**;
 - Quando o sinal entra no anel, ele **circula até ser retirado pelo nó de destino**.
 
-A moeda dourada é o token dando a volta. O envelope sai da origem e segue o sentido do anel até o destino.`,
+A moeda dourada é o token dando a volta. A mensagem sai da origem e segue o sentido do anel até o destino.`,
       fonte: f(15),
       cena: { topo: 'anel' },
       notas: [
@@ -838,7 +838,7 @@ Os quadrados verdes são os nós, como no desenho do slide.`,
 
 > **PROBLEMA** → Há o **monopólio do enlace**… o canal fica dedicado exclusivamente à ligação até que a comunicação seja desfeita.
 
-O caminho vermelho foi reservado para a ligação entre os dois telefones. O caminhão cinza quer usar um desses enlaces e fica esperando.`,
+O caminho vermelho foi reservado para a ligação entre os dois telefones. A ligação cinza (**VOZ**) quer usar um desses enlaces e fica esperando.`,
       fonte: f(17),
       cena: { modo: 'circuitos' },
       notas: [
@@ -857,7 +857,7 @@ Neste tipo **não existe o monopólio do canal**.
 - Em cada nó, **a mensagem inteira é recebida** e o próximo caminho é determinado com base no **endereço contido na mensagem**.
 - O funcionamento segue o princípio **GUARDAR-ENCAMINHAR** (*store-and-forward*).
 
-O bloco vermelho é a mensagem inteira: em cada nó ela para, fica **guardada** (o nó acende) e depois é **encaminhada**.`,
+O ícone grande (**MP4**) é a mensagem inteira: em cada nó ela para, fica **guardada** (o nó acende) e depois é **encaminhada**.`,
       fonte: f(17),
       cena: { modo: 'mensagens' },
     },
@@ -890,7 +890,7 @@ Os 5 pacotes vão por caminhos diferentes e chegam fora de ordem: **${ORDEM_DE_C
 - O enlace entre dois nós consecutivos é **compartilhado** por pacotes de outras proveniências e com outros destinos (**o canal não é monopolizado**).
 - Caso haja a perda de pacotes, o **pequeno tamanho permite uma fácil retransmissão**, pois o **cabeçalho** possibilita que a mensagem seja remontada **mesmo quando chegam fora de sequência**.
 
-Os caminhões roxos e verdes são pacotes de outras conversas usando os mesmos cabos.`,
+Os dados roxos e verdes são pacotes de outras conversas usando os mesmos cabos.`,
       fonte: f(19),
       cena: { modo: 'vantagens' },
       notas: [

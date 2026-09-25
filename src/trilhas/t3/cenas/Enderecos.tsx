@@ -29,7 +29,7 @@ function Tipos({ cena }: { cena: CenaProps }) {
 
       {/* 1º — físico: a placa de rede */}
       <PlacaDeRede pos={[-2.2, 0.12, 0.9]} rot={[0, 0.35, 0]} escala={1.6} />
-      <Ligacao pontos={[[-7.4, 0.14, 2.2], [-4.5, 0.14, 1.6], [-2.6, 0.14, 1.0]]} viagens={[{ duracao: 2.6, pausa: 1.4 }]} />
+      <Ligacao pontos={[[-7.4, 0.14, 1.0], [-2.6, 0.14, 1.0]]} surgir={0.1} viagens={[{ duracao: 2.6, pausa: 1.4 }]} />
       <Rotulo pos={[-2.2, 1.55, 0.9]} escuro>1º Físico <small>MAC</small></Rotulo>
       <Alvo id="mac" pos={[-2.2, 2.2, 0.9]} cena={cena} />
 
