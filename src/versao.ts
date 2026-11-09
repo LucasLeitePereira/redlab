@@ -1,8 +1,8 @@
 // Versão do RedeLab: "deploys.commits".
 // O 1º número é quantos deploys já foram publicados (cada push na main vira um deploy na Vercel);
 // o 2º é quantos commits a main tem. Atualize os dois a cada commit que for publicado.
-export const DEPLOYS = 6
-export const COMMITS = 6
+export const DEPLOYS = 7
+export const COMMITS = 7
 export const VERSAO = `${DEPLOYS}.${COMMITS}`
 
 export const DESENVOLVEDOR = 'Lucas Leite Pereira'

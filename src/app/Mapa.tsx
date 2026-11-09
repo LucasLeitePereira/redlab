@@ -8,13 +8,16 @@ import { Caixa, Cilindro, Esfera, Palco, Rotulo, useAtualizarSombras, type V3 } 
 import { geometriaFaixa, geometriaPista, LARGURA_PISTA } from '../three/estrada'
 import { PosteKenney } from '../three/kenney'
 import { emSequencia, Ligacao } from '../three/Ligacao'
-import { Caminhao, Computador, Servidor, PontoDeAcesso, Switch } from '../three/modelos'
+import { Caminhao, Computador, Envelope, Servidor, PontoDeAcesso, Switch } from '../three/modelos'
 import { curvaSuave, Viajante } from '../three/movimento'
 import { TRILHAS } from '../trilhas'
 import { ir } from './rota'
 import { DESENVOLVEDOR, DISCIPLINA, PROFESSOR, VERSAO } from '../versao'
 
-const POSICOES: V3[] = [[-8, 0, 1.5], [-4.8, 0, -2.1], [-1.6, 0, 1.5], [1.6, 0, -2.1], [4.8, 0, 1.5], [8, 0, -2.1]]
+const POSICOES: V3[] = [
+  [-11.2, 0, 1.5], [-8, 0, -2.1], [-4.8, 0, 1.5], [-1.6, 0, -2.1],
+  [1.6, 0, 1.5], [4.8, 0, -2.1], [8, 0, 1.5], [11.2, 0, -2.1],
+]
 const CINZA = '#b8bfc7'
 const RAIO_ILHA = 2.1
 const MATERIAL_PISTA = new MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: DoubleSide })
@@ -63,6 +66,30 @@ function Miniatura({ numero }: { numero: number }) {
           ))}
           <Esfera raio={0.6} pos={[0.9, 0.6, 0.1]} cor="#3f7fc4" />
           <Cilindro raio={0.62} altura={0.06} lados={24} pos={[0.9, 0.6, 0.1]} cor="#a9d18e" />
+        </group>
+      )
+    case 7:
+      // servidor com envelope e as portas: protocolos e serviços da Internet
+      return (
+        <group scale={0.6}>
+          <Servidor pos={[-0.7, 0, 0]} />
+          <Envelope pos={[0.9, 1.2, 0.2]} escala={1.6} />
+          {['#c2408f', '#2f6fb0', '#e9a620'].map((cor, i) => (
+            <Caixa key={i} tam={[0.34, 0.34, 0.34]} pos={[0.5 + i * 0.42, 0.18, 0.3]} cor={cor} />
+          ))}
+        </group>
+      )
+    case 8:
+      // anel de estações com o token: controle de acesso ao meio
+      return (
+        <group scale={0.6}>
+          <Cilindro raio={1.25} altura={0.06} lados={32} pos={[0, 0.05, 0]} cor="#8a5a2b" />
+          <Cilindro raio={1.1} altura={0.08} lados={32} pos={[0, 0.05, 0]} cor="#e8dcc8" />
+          {[0, 1, 2, 3, 4].map((i) => {
+            const a = (i / 5) * Math.PI * 2
+            return <Caixa key={i} tam={[0.42, 0.36, 0.36]} pos={[Math.cos(a) * 1.18, 0.22, Math.sin(a) * 1.18]} cor="#e3e8ee" />
+          })}
+          <Caixa tam={[0.3, 0.2, 0.3]} pos={[1.18, 0.55, 0]} cor="#5fb35a" />
         </group>
       )
     default:
