@@ -38,7 +38,7 @@ function Sinal({ de, para }: { de: V3; para: V3 }) {
   return <Pulsos curva={curva} cor={BT} quantidade={2} duracao={1.8} tamanho={0.07} />
 }
 
-function Wpan() {
+export function Wpan() {
   const cel: V3 = [-3.0, 0.12, -0.5]
   const fone: V3 = [-5.0, 0.12, 0.5]
   const lapA: V3 = [-2.6, 0.12, 1.9]

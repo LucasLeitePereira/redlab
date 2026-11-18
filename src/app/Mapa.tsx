@@ -15,8 +15,8 @@ import { ir } from './rota'
 import { DESENVOLVEDOR, DISCIPLINA, PROFESSOR, VERSAO } from '../versao'
 
 const POSICOES: V3[] = [
-  [-11.2, 0, 1.5], [-8, 0, -2.1], [-4.8, 0, 1.5], [-1.6, 0, -2.1],
-  [1.6, 0, 1.5], [4.8, 0, -2.1], [8, 0, 1.5], [11.2, 0, -2.1],
+  [-12.8, 0, 1.5], [-9.6, 0, -2.1], [-6.4, 0, 1.5], [-3.2, 0, -2.1], [0, 0, 1.5],
+  [3.2, 0, -2.1], [6.4, 0, 1.5], [9.6, 0, -2.1], [12.8, 0, 1.5],
 ]
 const CINZA = '#b8bfc7'
 const RAIO_ILHA = 2.1
@@ -90,6 +90,17 @@ function Miniatura({ numero }: { numero: number }) {
             return <Caixa key={i} tam={[0.42, 0.36, 0.36]} pos={[Math.cos(a) * 1.18, 0.22, Math.sin(a) * 1.18]} cor="#e3e8ee" />
           })}
           <Caixa tam={[0.3, 0.2, 0.3]} pos={[1.18, 0.55, 0]} cor="#5fb35a" />
+        </group>
+      )
+    case 9:
+      // coaxial, par trançado e fibra acesa: os meios físicos
+      return (
+        <group scale={0.6}>
+          <Cilindro raio={0.34} altura={2.2} lados={20} pos={[-0.95, 0.36, 0]} rot={[Math.PI / 2, 0, 0]} cor="#2b2b2b" />
+          <Cilindro raio={0.1} altura={2.4} lados={12} pos={[-0.95, 0.36, 0]} rot={[Math.PI / 2, 0, 0]} cor="#c8792e" />
+          <Cilindro raio={0.28} altura={2.2} lados={16} pos={[0, 0.3, 0]} rot={[Math.PI / 2, 0, 0]} cor="#2f6fb0" />
+          <Cilindro raio={0.22} altura={2.2} lados={16} pos={[0.95, 0.24, 0]} rot={[Math.PI / 2, 0, 0]} cor="#e9a620" />
+          <Cilindro raio={0.09} altura={2.4} lados={10} pos={[0.95, 0.24, 0]} rot={[Math.PI / 2, 0, 0]} cor="#fff2b0" emissivo="#ffd84a" />
         </group>
       )
     default:
