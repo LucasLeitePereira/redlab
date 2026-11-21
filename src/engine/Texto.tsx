@@ -53,7 +53,7 @@ export function FonteChip({ fonte }: { fonte: Fonte }) {
         <path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z" />
         <path d="M4 19V5" />
       </svg>
-      {fonte.aula} · p. {fonte.pagina}
+      {fonte.aula} · {typeof fonte.pagina === 'string' && fonte.pagina.startsWith('Q') ? `questão ${fonte.pagina.slice(1)}` : `p. ${fonte.pagina}`}
     </span>
   )
 }

@@ -451,6 +451,13 @@ export function Mapa({ trilhaId }: { trilhaId?: string }) {
               {trilha.titulo} ({trilha.aula}) chega nas próximas partes.
             </div>
           )}
+          <button className="av2-atalho" onClick={() => ir('/av2')}>
+            <span className="av2-atalho-icone">📝</span>
+            <span>
+              <b>Simulado AV2</b>
+              <span>As 10 questões da prova + questões parecidas, com correção</span>
+            </span>
+          </button>
           <div className="trilhas-lista" style={{ marginTop: 14 }}>
             {TRILHAS.map((t) => {
               const feitas = t.fases.filter((f) => fases[f.id]).length

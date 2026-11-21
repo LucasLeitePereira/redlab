@@ -8,6 +8,7 @@ import { trilha6 } from './t6/conteudo'
 import { trilha7 } from './t7/conteudo'
 import { trilha8 } from './t8/conteudo'
 import { trilha9 } from './t9/conteudo'
+import { trilha10 } from './t10/conteudo'
 
 export const TRILHAS: Trilha[] = [
   trilha1,
@@ -19,6 +20,7 @@ export const TRILHAS: Trilha[] = [
   trilha7,
   trilha8,
   trilha9,
+  trilha10,
 ]
 
 export const acharTrilha = (id: string) => TRILHAS.find((t) => t.id === id)

@@ -1,3 +1,4 @@
+import { Simulado } from '../av2/Simulado'
 import { Chefao } from '../engine/Chefao'
 import { FasePlayer } from '../engine/FasePlayer'
 import { acharTrilha } from '../trilhas'
@@ -13,6 +14,8 @@ export function App() {
     // key: trocar de fase precisa zerar passo, desafio e alvos revelados
     if (trilha && fase) return <FasePlayer key={fase.id} trilha={trilha} fase={fase} />
   }
+
+  if (rota.tela === 'av2') return <Simulado />
 
   if (rota.tela === 'chefao') {
     const trilha = acharTrilha(rota.trilha)
