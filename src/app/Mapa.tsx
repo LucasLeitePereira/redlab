@@ -8,16 +8,14 @@ import { Caixa, Cilindro, Esfera, Palco, Rotulo, useAtualizarSombras, type V3 } 
 import { geometriaFaixa, geometriaPista, LARGURA_PISTA } from '../three/estrada'
 import { PosteKenney } from '../three/kenney'
 import { emSequencia, Ligacao } from '../three/Ligacao'
-import { Caminhao, Computador, Envelope, Servidor, PontoDeAcesso, Switch } from '../three/modelos'
+import { Caminhao, Computador, Envelope, Roteador, Servidor, PontoDeAcesso, Switch } from '../three/modelos'
 import { curvaSuave, Viajante } from '../three/movimento'
 import { TRILHAS } from '../trilhas'
 import { ir } from './rota'
 import { DESENVOLVEDOR, DISCIPLINA, PROFESSOR, VERSAO } from '../versao'
 
-const POSICOES: V3[] = [
-  [-12.8, 0, 1.5], [-9.6, 0, -2.1], [-6.4, 0, 1.5], [-3.2, 0, -2.1], [0, 0, 1.5],
-  [3.2, 0, -2.1], [6.4, 0, 1.5], [9.6, 0, -2.1], [12.8, 0, 1.5],
-]
+// Uma ilha por trilha, em zigue-zague, centradas em x = 0 (cresce sozinho a cada trilha nova).
+const POSICOES: V3[] = TRILHAS.map((_, i) => [(i - (TRILHAS.length - 1) / 2) * 3.2, 0, i % 2 ? -2.1 : 1.5])
 const CINZA = '#b8bfc7'
 const RAIO_ILHA = 2.1
 const MATERIAL_PISTA = new MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: DoubleSide })
@@ -101,6 +99,15 @@ function Miniatura({ numero }: { numero: number }) {
           <Cilindro raio={0.28} altura={2.2} lados={16} pos={[0, 0.3, 0]} rot={[Math.PI / 2, 0, 0]} cor="#2f6fb0" />
           <Cilindro raio={0.22} altura={2.2} lados={16} pos={[0.95, 0.24, 0]} rot={[Math.PI / 2, 0, 0]} cor="#e9a620" />
           <Cilindro raio={0.09} altura={2.4} lados={10} pos={[0.95, 0.24, 0]} rot={[Math.PI / 2, 0, 0]} cor="#fff2b0" emissivo="#ffd84a" />
+        </group>
+      )
+    case 10:
+      // roteador ligando dois switches: os equipamentos de rede
+      return (
+        <group scale={0.6}>
+          <Roteador pos={[0, 0, -0.6]} />
+          <Switch pos={[-1.2, 0, 0.8]} portas={3} />
+          <Switch pos={[1.2, 0, 0.8]} portas={3} />
         </group>
       )
     default:
@@ -290,7 +297,7 @@ function AjustarDistancia() {
     const precisa = MEIA_LARGURA / (tanV * (livre / alturaTotal))
     const alvo = new Vector3(...ALVO_MAPA)
     const dir = new Vector3(...CAMERA_MAPA).sub(alvo)
-    const distancia = Math.min(34, Math.max(dir.length(), precisa))
+    const distancia = Math.min(40, Math.max(dir.length(), precisa))
     cam.position.copy(alvo).addScaledVector(dir.normalize(), distancia)
   }, [camera, size])
   return null
@@ -320,7 +327,7 @@ export function Mapa({ trilhaId }: { trilhaId?: string }) {
   return (
     <div className="tela">
       <div className="ceu">
-        <Palco camera={CAMERA_MAPA} alvo={ALVO_MAPA} distancia={[10, 34]}>
+        <Palco camera={CAMERA_MAPA} alvo={ALVO_MAPA} distancia={[10, 40]} arrastar={MEIA_LARGURA}>
           <CenaMapa selecionada={trilhaId} />
         </Palco>
       </div>
@@ -331,7 +338,7 @@ export function Mapa({ trilhaId }: { trilhaId?: string }) {
           RedeLab
         </div>
       </header>
-      <div className="dica-camera">🖱️ clique numa ilha para abrir a trilha</div>
+      <div className="dica-camera">🖱️ clique numa ilha para abrir · arraste com o botão direito para andar pelo mapa</div>
 
       {sobre ? (
         <Painel

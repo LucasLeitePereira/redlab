@@ -165,11 +165,30 @@ function Enquadrar() {
   return null
 }
 
+/** Segura o alvo do OrbitControls dentro da faixa do mapa (só anda em x e um pouco em z). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function limitarArraste(controles: any, base: V3, limite: number) {
+  if (!controles) return
+  const t = controles.target
+  const x = Math.max(base[0] - limite, Math.min(base[0] + limite, t.x))
+  const z = Math.max(base[2] - 4, Math.min(base[2] + 4, t.z))
+  const dx = x - t.x
+  const dz = z - t.z
+  const dy = base[1] - t.y
+  if (dx || dz || dy) {
+    t.set(x, base[1], z)
+    controles.object.position.x += dx
+    controles.object.position.y += dy
+    controles.object.position.z += dz
+  }
+}
+
 export function Palco({
   camera,
   alvo = [0, 0.6, 0],
   distancia = [6, 30],
   versao,
+  arrastar,
   children,
 }: {
   camera: V3
@@ -177,6 +196,8 @@ export function Palco({
   distancia?: [number, number]
   /** Muda quando a cena muda de estado: dispara a atualização das sombras. */
   versao?: unknown
+  /** Libera arrastar a vista pelo chão (botão direito ou dois dedos), até essa distância do alvo em x. */
+  arrastar?: number
   children: ReactNode
 }) {
   const camada = useRef<HTMLDivElement>(null)
@@ -210,7 +231,9 @@ export function Palco({
           <OrbitControls
             target={alvo}
             enableDamping
-            enablePan={false}
+            enablePan={!!arrastar}
+            screenSpacePanning={false}
+            onChange={arrastar ? (e) => limitarArraste(e?.target, alvo, arrastar) : undefined}
             minDistance={distancia[0]}
             maxDistance={distancia[1]}
             maxPolarAngle={1.32}
