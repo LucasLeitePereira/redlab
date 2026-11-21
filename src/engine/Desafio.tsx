@@ -138,7 +138,8 @@ function Dados({ linhas }: { linhas?: string[] }) {
 }
 
 function Escolha({ q, onResponder }: { q: QuestaoEscolha; onResponder: (certa: boolean) => void }) {
-  const ordem = useMemo(() => embaralhar(q.opcoes.map((_, i) => i)), [q])
+  // Opções do tipo "Apenas I e II…" ficam na ordem, como na prova.
+  const ordem = useMemo(() => (q.opcoes.every((o) => /^(Apenas|Todas)/.test(o)) ? q.opcoes.map((_, i) => i) : embaralhar(q.opcoes.map((_, i) => i))), [q])
   const [escolhida, setEscolhida] = useState<number | null>(null)
 
   return (
