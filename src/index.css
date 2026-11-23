@@ -861,6 +861,7 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 .av2-explicacao { margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: var(--amarelo-claro); line-height: 1.5; font-size: 14.5px; }
 .av2-fonte { margin-top: 6px; font-size: 12px; color: var(--tinta-3); }
 .av2-rodape { position: sticky; bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--papel); border-radius: 99px; box-shadow: var(--sombra); padding: 8px 8px 8px 20px; font-weight: 700; }
+.av2-acoes { display: flex; gap: 8px; }
 @media (max-width: 640px) {
   .av2-filtros { grid-template-columns: 1fr; }
   .av2-itens.duas { grid-template-columns: 1fr; }
