@@ -1,7 +1,7 @@
 // Revisão G2 2025/1 (Redes de Computadores, prof. Luiz Fernando T. de Farias, prova de 26/06/2025).
 // Cópia das 10 questões da prova, na ordem e com as alternativas na ordem original.
-// Gabarito conferido pelos slides e batido com a prova escaneada: o aluno tirou 7,0 e,
-// com este gabarito, errou exatamente 3 (Q4, Q5 e Q8).
+// Gabarito pela correção do professor na prova escaneada (traços vermelhos).
+// Q2 = B (Carrier Sense), confirmado pelo Lucas: o professor não aceitou a D (CD).
 // Só questões da prova: nada de "parecidas", para não repetir o Simulado AV2.
 
 import type { QuestaoAv2 } from '../av2/questoes'
@@ -41,9 +41,9 @@ export const QUESTOES_G2_2025: QuestaoAv2[] = [
       'Detector de Colisão (CD, Collision Detection).',
       'Ajustador de Contenção (CW, Contention Windows).',
     ],
-    correta: 3,
+    correta: 1,
     explicacao:
-      'Perceber o choque **durante** a transmissão, parar e esperar um tempo aleatório é a **detecção de colisão** (o "CD" do CSMA/CD). O CS escuta o meio **antes** de transmitir.',
+      'Gabarito do professor: **Sensor de Portadora (CS, Carrier Sense)**. A pista é "perceba se há outro sinal no meio": sentir o sinal (a portadora) no meio é o **CS**. Cuidado: a D (CD) parece certa por causa do "durante a transmissão", mas não foi a resposta aceita.',
     fonte: 'Aula 07 · CSMA/CD',
   },
   {

@@ -11,7 +11,7 @@ describe('G2 2025/1: questões', () => {
 
   it('gabarito igual ao conferido na prova escaneada', () => {
     const letras = QUESTOES_G2_2025.map((q) => 'ABCDE'[q.correta]).join('')
-    expect(letras).toBe('BDBCCDDDEC')
+    expect(letras).toBe('BBBCCDDDEC')
   })
 
   it('cada questão tem 5 opções e a correta existe', () => {
