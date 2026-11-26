@@ -284,15 +284,15 @@ O ruído atinge os dois pares do mesmo jeito; como o sinal de um é o inverso do
       texto: `
 > Devido aos diversos usos do cabo par trançado, a norma EIA/TIA 568-A definiu as seguintes categorias:
 
-O CAT5e e o CAT6 estão destacados no slide. A tabela completa do anexo (até o CAT8) está na fase 8.8.`,
+A tabela é a do anexo de categorias de cabos (CAT1 a CAT8). O CAT5e e o CAT6 estão destacados: são os mais usados hoje.`,
       fonte: a8(10),
       cena: { modo: 'categorias' },
       notas: [
         {
           tipo: 'slide-vs-pratica',
           titulo: 'CAT5e',
-          noSlide: 'CAT5e: até 100 MHz, **100 Mbps** (Fast Ethernet).',
-          naPratica: 'O CAT5e foi feito para o **Gigabit Ethernet** (1 Gbps, 1000BASE-T). Os 100 Mbps são do CAT5. Na prova, responda como o slide.',
+          noSlide: 'O anexo mostra o CAT5e com **100 Mbps (568A)** e **1 Gbps (568B)**. Os 100 Mbps puros (Fast Ethernet) são do **CAT5**.',
+          naPratica: '568A e 568B são só a ordem das cores no RJ-45: o CAT5e faz **1 Gbps** (1000BASE-T) com qualquer uma. Na G2 2025/1 caiu: a categoria **mínima** para o 1000BASE-T é a **CAT5e**.',
         },
       ],
     },

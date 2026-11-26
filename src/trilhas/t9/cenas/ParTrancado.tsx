@@ -136,26 +136,30 @@ function Cancelamento() {
 
 // ---------------------------------------------------------------- categorias
 
+// Igual ao slide do anexo (REDES-08_Anexo-Categoria-Cabos): Categoria | Banda | Taxa Transferência | Uso Comum.
 const COLS: Col[] = [
   { id: 'cat', titulo: 'Categoria' },
-  { id: 'freq', titulo: 'Frequência' },
-  { id: 'taxa', titulo: 'Taxa / Uso' },
+  { id: 'freq', titulo: 'Banda' },
+  { id: 'taxa', titulo: 'Taxa Transferência' },
+  { id: 'uso', titulo: 'Uso Comum' },
 ]
 
-const DADOS: [string, string, string, boolean?][] = [
-  ['CAT1', '--', 'Cabo telefônico tradicional (voz)'],
-  ['CAT2', 'até 4 MHz', 'Transmissão de dados'],
-  ['CAT3', 'até 10 MHz', '10 Mbps (ETHERNET)'],
-  ['CAT4', 'até 16 MHz', '20 Mbps (TOKEN RING)'],
-  ['CAT5e', 'até 100 MHz', '100 Mbps (FAST ETHERNET)', true],
-  ['CAT6', 'até 250 MHz', '1 Gbps (GIGA BIT ETHERNET)', true],
-  ['CAT7', 'até 600 MHz', '10 Gbps'],
+const DADOS: [string, string, string, string, boolean?][] = [
+  ['CAT1', '--', '--', 'Cabo telefônico tradicional (voz)'],
+  ['CAT2', '4 MHz', '--', 'Transmissão de dados'],
+  ['CAT3', '10 MHz', '10 Mbps (Ethernet)', 'Obsoleto'],
+  ['CAT4', '16 MHz', '20 Mbps (Token Ring)', 'Obsoleto'],
+  ['CAT5', '100 MHz', '100 Mbps (Fast Ethernet)', 'Obsoleto'],
+  ['CAT5e', '100 MHz', '100 Mbps (568A) / 1 Gbps (568B)', 'Redes corporativas', true],
+  ['CAT6', '250 MHz', '1 Gbps (Gigabit Ethernet)', 'UTP ou STP', true],
+  ['CAT7', '600 MHz', '10 Gbps (10 Gigas)', 'Blindagem dupla -- Conector GG45'],
+  ['CAT8', '2 GHz', '20-40 Gbps (30 m)', 'Altíssimo desempenho'],
 ]
 
 function Categorias({ semTaxa, semFreq }: { semTaxa: boolean; semFreq: boolean }) {
   const colunas = COLS.map((c) => ({ ...c, esconder: (c.id === 'taxa' && semTaxa) || (c.id === 'freq' && semFreq) }))
-  const linhas = DADOS.map((d) => linha(colunas, [d[0], d[1], d[2]], !!d[3]))
-  return <Tabela3D pos={[0, 2.2, 0]} colunas={colunas} linhas={linhas} titulo="EIA/TIA 568-A" largura={640} fonte={14} />
+  const linhas = DADOS.map((d) => linha(colunas, [d[0], d[1], d[2], d[3]], !!d[4]))
+  return <Tabela3D pos={[0, 2.2, 0]} colunas={colunas} linhas={linhas} titulo="Par-Trançado: Categorias" largura={820} fonte={14} />
 }
 
 // ---------------------------------------------------------------- estrela

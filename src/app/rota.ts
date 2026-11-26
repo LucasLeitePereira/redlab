@@ -8,12 +8,14 @@ export type Rota =
   | { tela: 'fase'; trilha: string; fase: string }
   | { tela: 'chefao'; trilha: string }
   | { tela: 'av2' }
+  | { tela: 'g2-2025' }
 
 function ler(): Rota {
   const partes = window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean)
   if (partes[0] === 'fase' && partes[1] && partes[2]) return { tela: 'fase', trilha: partes[1], fase: partes[2] }
   if (partes[0] === 'chefao' && partes[1]) return { tela: 'chefao', trilha: partes[1] }
   if (partes[0] === 'av2') return { tela: 'av2' }
+  if (partes[0] === 'g2-2025') return { tela: 'g2-2025' }
   if (partes[0] === 'trilha' && partes[1]) return { tela: 'mapa', trilha: partes[1] }
   return { tela: 'mapa' }
 }

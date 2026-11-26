@@ -1,4 +1,5 @@
 import { Simulado } from '../av2/Simulado'
+import { Revisao } from '../g2/Revisao'
 import { Chefao } from '../engine/Chefao'
 import { FasePlayer } from '../engine/FasePlayer'
 import { acharTrilha } from '../trilhas'
@@ -16,6 +17,7 @@ export function App() {
   }
 
   if (rota.tela === 'av2') return <Simulado />
+  if (rota.tela === 'g2-2025') return <Revisao />
 
   if (rota.tela === 'chefao') {
     const trilha = acharTrilha(rota.trilha)
